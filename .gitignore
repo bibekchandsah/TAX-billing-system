@@ -29,13 +29,13 @@ dist-ssr
 .env.production
 .env.staging
 
-# Temp/scratch files
+# Temp/scratch files (root level only)
 *.py
-*.js
-fix_*.js
-check.js
-script.js
-ndp.js
+/fix_*.js
+/check.js
+/script.js
+/ndp.js
+/datepicker_js.js
 edit_backup.jsx
 
 FIRESTORE_RULES_COPY_THIS.txt
