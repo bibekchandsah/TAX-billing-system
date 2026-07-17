@@ -1,4 +1,4 @@
-﻿# Logs
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -37,3 +37,5 @@ check.js
 script.js
 ndp.js
 edit_backup.jsx
+
+FIRESTORE_RULES_COPY_THIS.txt
