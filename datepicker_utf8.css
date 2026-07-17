@@ -1,0 +1,802 @@
+﻿/**
+ * Nepali Date Picker CSS - Premium Edition
+ * Author: Om Pandey
+ * Version: 2.3.0
+ * Website: https://www.omkumarpandey.com.np/
+ * FIXED: Saturday (शनिबार) is now red as it's Nepal's weekly holiday
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ============================================
+   CSS Variables
+   ============================================ */
+:root {
+    --ndp-font-nepali: 'Noto Sans Devanagari', sans-serif;
+    --ndp-font-english: 'Plus Jakarta Sans', sans-serif;
+    
+    --ndp-bg-primary: #ffffff;
+    --ndp-bg-secondary: #f8fafc;
+    --ndp-bg-tertiary: #f1f5f9;
+    
+    --ndp-text-primary: #0f172a;
+    --ndp-text-secondary: #475569;
+    --ndp-text-tertiary: #94a3b8;
+    
+    --ndp-border-light: rgba(0, 0, 0, 0.06);
+    --ndp-border-medium: rgba(0, 0, 0, 0.1);
+    
+    --ndp-accent-start: #8b5cf6;
+    --ndp-accent-end: #ec4899;
+    --ndp-accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    --ndp-accent-gradient-hover: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+    
+    /* ✅ FIXED: Saturday is holiday in Nepal (Red), Sunday is regular (Blue) */
+    --ndp-saturday: #ef4444;
+    --ndp-sunday: #3b82f6;
+    --ndp-today: #f59e0b;
+    
+    --ndp-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --ndp-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --ndp-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+    --ndp-shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.2);
+    --ndp-shadow-glow: 0 0 40px rgba(139, 92, 246, 0.25);
+    
+    --ndp-radius-sm: 8px;
+    --ndp-radius-md: 12px;
+    --ndp-radius-lg: 16px;
+    --ndp-radius-xl: 20px;
+}
+
+/* Dark Theme */
+.ndp-dark {
+    --ndp-bg-primary: #0f172a;
+    --ndp-bg-secondary: #1e293b;
+    --ndp-bg-tertiary: #334155;
+    
+    --ndp-text-primary: #f8fafc;
+    --ndp-text-secondary: #cbd5e1;
+    --ndp-text-tertiary: #64748b;
+    
+    --ndp-border-light: rgba(255, 255, 255, 0.06);
+    --ndp-border-medium: rgba(255, 255, 255, 0.1);
+    
+    --ndp-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --ndp-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --ndp-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --ndp-shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+/* Theme Variants */
+.ndp-theme-ocean {
+    --ndp-accent-start: #06b6d4;
+    --ndp-accent-end: #3b82f6;
+    --ndp-accent-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+    --ndp-accent-gradient-hover: linear-gradient(135deg, #0891b2 0%, #2563eb 100%);
+    --ndp-shadow-glow: 0 0 40px rgba(6, 182, 212, 0.25);
+}
+
+.ndp-theme-forest {
+    --ndp-accent-start: #10b981;
+    --ndp-accent-end: #84cc16;
+    --ndp-accent-gradient: linear-gradient(135deg, #10b981 0%, #84cc16 100%);
+    --ndp-accent-gradient-hover: linear-gradient(135deg, #059669 0%, #65a30d 100%);
+    --ndp-shadow-glow: 0 0 40px rgba(16, 185, 129, 0.25);
+}
+
+.ndp-theme-sunset {
+    --ndp-accent-start: #f97316;
+    --ndp-accent-end: #ef4444;
+    --ndp-accent-gradient: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+    --ndp-accent-gradient-hover: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+    --ndp-shadow-glow: 0 0 40px rgba(249, 115, 22, 0.25);
+}
+
+.ndp-theme-rose {
+    --ndp-accent-start: #f43f5e;
+    --ndp-accent-end: #a855f7;
+    --ndp-accent-gradient: linear-gradient(135deg, #f43f5e 0%, #a855f7 100%);
+    --ndp-accent-gradient-hover: linear-gradient(135deg, #e11d48 0%, #9333ea 100%);
+    --ndp-shadow-glow: 0 0 40px rgba(244, 63, 94, 0.25);
+}
+
+/* ============================================
+   Main Container
+   ============================================ */
+.nepali-datepicker {
+    position: relative;
+    font-family: var(--ndp-font-nepali);
+    width: 100%;
+    max-width: 340px;
+}
+
+.nepali-datepicker * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================
+   Input Field
+   ============================================ */
+.ndp-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.ndp-input {
+    width: 100%;
+    padding: 14px 48px 14px 16px;
+    font-family: var(--ndp-font-nepali);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ndp-text-primary);
+    background: var(--ndp-bg-primary);
+    border: 2px solid var(--ndp-border-medium);
+    border-radius: var(--ndp-radius-lg);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: var(--ndp-shadow-sm);
+}
+
+.ndp-input:hover {
+    border-color: var(--ndp-accent-start);
+}
+
+.ndp-input:focus {
+    border-color: var(--ndp-accent-start);
+    box-shadow: var(--ndp-shadow-md), 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.ndp-input::placeholder {
+    color: var(--ndp-text-tertiary);
+    font-weight: 500;
+}
+
+.ndp-input-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    color: var(--ndp-text-tertiary);
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.ndp-input:hover + .ndp-input-icon,
+.ndp-input:focus + .ndp-input-icon {
+    color: var(--ndp-accent-start);
+}
+
+.ndp-input-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke-width: 2;
+}
+
+/* ============================================
+   Calendar Container - FIXED POSITIONING
+   ============================================ */
+.ndp-calendar {
+    position: fixed;
+    width: 340px;
+    background: var(--ndp-bg-primary);
+    border: 1px solid var(--ndp-border-light);
+    border-radius: var(--ndp-radius-xl);
+    box-shadow: var(--ndp-shadow-xl), var(--ndp-shadow-glow);
+    z-index: 999999;
+    visibility: hidden;
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+    transition: none;
+    overflow: hidden;
+}
+
+.ndp-calendar.ndp-open {
+    visibility: visible;
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    animation: ndpSlideIn 0.2s ease-out;
+}
+
+.ndp-calendar.ndp-position-top {
+    animation: ndpSlideInUp 0.2s ease-out;
+}
+
+@keyframes ndpSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes ndpSlideInUp {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* ============================================
+   Calendar Header
+   ============================================ */
+.ndp-header {
+    padding: 16px;
+    background: var(--ndp-accent-gradient);
+    position: relative;
+}
+
+.ndp-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 100%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.ndp-header-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.ndp-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: var(--ndp-radius-md);
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+}
+
+.ndp-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.ndp-nav-btn:active {
+    transform: scale(0.92);
+}
+
+.ndp-nav-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5;
+}
+
+.ndp-title-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: var(--ndp-radius-md);
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    min-width: 160px;
+}
+
+.ndp-title-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.ndp-title-nepali {
+    font-size: 17px;
+    font-weight: 700;
+    color: white;
+    font-family: var(--ndp-font-nepali);
+    line-height: 1.2;
+}
+
+.ndp-title-english {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: var(--ndp-font-english);
+}
+
+/* ============================================
+   Picker Views (Month/Year)
+   ============================================ */
+.ndp-month-picker,
+.ndp-year-picker {
+    display: none;
+    padding: 16px;
+    background: var(--ndp-bg-primary);
+}
+
+.ndp-month-picker.ndp-active,
+.ndp-year-picker.ndp-active {
+    display: block;
+}
+
+.ndp-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--ndp-border-light);
+}
+
+.ndp-picker-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ndp-text-primary);
+}
+
+.ndp-picker-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: var(--ndp-bg-tertiary);
+    border: none;
+    border-radius: var(--ndp-radius-sm);
+    color: var(--ndp-text-secondary);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.ndp-picker-close:hover {
+    background: var(--ndp-accent-gradient);
+    color: white;
+}
+
+.ndp-picker-close svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Month Grid */
+.ndp-month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.ndp-month-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    background: var(--ndp-bg-secondary);
+    border: 2px solid transparent;
+    border-radius: var(--ndp-radius-md);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.ndp-month-item:hover {
+    background: var(--ndp-bg-tertiary);
+    border-color: var(--ndp-accent-start);
+    transform: scale(1.03);
+}
+
+.ndp-month-item.ndp-selected {
+    background: var(--ndp-accent-gradient);
+    border-color: transparent;
+}
+
+.ndp-month-item.ndp-selected .ndp-month-nep,
+.ndp-month-item.ndp-selected .ndp-month-eng {
+    color: white;
+}
+
+.ndp-month-item.ndp-current:not(.ndp-selected) {
+    border-color: var(--ndp-today);
+}
+
+.ndp-month-nep {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ndp-text-primary);
+    font-family: var(--ndp-font-nepali);
+}
+
+.ndp-month-eng {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ndp-text-tertiary);
+    font-family: var(--ndp-font-english);
+    margin-top: 2px;
+}
+
+/* Year Picker */
+.ndp-year-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.ndp-year-range {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ndp-text-primary);
+    font-family: var(--ndp-font-nepali);
+}
+
+.ndp-year-nav-btns {
+    display: flex;
+    gap: 6px;
+}
+
+.ndp-year-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: var(--ndp-bg-tertiary);
+    border: none;
+    border-radius: var(--ndp-radius-sm);
+    color: var(--ndp-text-secondary);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.ndp-year-nav-btn:hover {
+    background: var(--ndp-accent-gradient);
+    color: white;
+}
+
+.ndp-year-nav-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.ndp-year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.ndp-year-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 6px;
+    background: var(--ndp-bg-secondary);
+    border: 2px solid transparent;
+    border-radius: var(--ndp-radius-md);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.ndp-year-item:hover:not(.ndp-disabled) {
+    background: var(--ndp-bg-tertiary);
+    border-color: var(--ndp-accent-start);
+    transform: scale(1.03);
+}
+
+.ndp-year-item.ndp-selected {
+    background: var(--ndp-accent-gradient);
+    border-color: transparent;
+}
+
+.ndp-year-item.ndp-selected .ndp-year-nep,
+.ndp-year-item.ndp-selected .ndp-year-eng {
+    color: white;
+}
+
+.ndp-year-item.ndp-current:not(.ndp-selected) {
+    border-color: var(--ndp-today);
+}
+
+.ndp-year-item.ndp-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.ndp-year-nep {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ndp-text-primary);
+    font-family: var(--ndp-font-nepali);
+}
+
+.ndp-year-eng {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ndp-text-tertiary);
+    font-family: var(--ndp-font-english);
+    margin-top: 2px;
+}
+
+/* ============================================
+   Days View
+   ============================================ */
+.ndp-days-view {
+    display: block;
+}
+
+.ndp-days-view.ndp-hidden {
+    display: none;
+}
+
+/* Weekday Headers */
+.ndp-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 10px 12px;
+    background: var(--ndp-bg-secondary);
+    border-bottom: 1px solid var(--ndp-border-light);
+}
+
+.ndp-weekday {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 2px;
+}
+
+.ndp-weekday-nep {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ndp-text-secondary);
+}
+
+.ndp-weekday-eng {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--ndp-text-tertiary);
+    font-family: var(--ndp-font-english);
+    margin-top: 1px;
+}
+
+/* ✅ FIXED: Saturday (शनि) is red - Nepal's weekly holiday */
+.ndp-weekday.ndp-sat .ndp-weekday-nep { color: var(--ndp-saturday); }
+/* Sunday (आइत) is blue - regular working day in Nepal */
+.ndp-weekday.ndp-sun .ndp-weekday-nep { color: var(--ndp-sunday); }
+
+/* Days Grid */
+.ndp-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 10px;
+    gap: 4px;
+    background: var(--ndp-bg-primary);
+}
+
+.ndp-day {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    padding: 2px;
+    background: transparent;
+    border-radius: var(--ndp-radius-md);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    border: 2px solid transparent;
+}
+
+.ndp-day:hover:not(.ndp-empty):not(.ndp-disabled) {
+    background: var(--ndp-bg-tertiary);
+    transform: scale(1.1);
+}
+
+.ndp-day.ndp-empty {
+    cursor: default;
+    visibility: hidden;
+}
+
+.ndp-day.ndp-disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.ndp-day.ndp-today {
+    border-color: var(--ndp-today);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.ndp-day.ndp-selected {
+    background: var(--ndp-accent-gradient);
+    border-color: transparent;
+    transform: scale(1.1);
+    box-shadow: var(--ndp-shadow-md);
+}
+
+.ndp-day.ndp-selected:hover {
+    background: var(--ndp-accent-gradient-hover);
+}
+
+.ndp-day.ndp-selected .ndp-day-nep,
+.ndp-day.ndp-selected .ndp-day-eng {
+    color: white;
+}
+
+.ndp-day-nep {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ndp-text-primary);
+    line-height: 1;
+}
+
+.ndp-day-eng {
+    font-size: 8px;
+    font-weight: 600;
+    color: var(--ndp-text-tertiary);
+    font-family: var(--ndp-font-english);
+    margin-top: 2px;
+}
+
+/* ✅ FIXED: Saturday (शनि) dates are red - Nepal's weekly holiday */
+.ndp-day.ndp-sat:not(.ndp-selected) .ndp-day-nep { color: var(--ndp-saturday); }
+/* Sunday (आइत) dates are blue - regular working day in Nepal */
+.ndp-day.ndp-sun:not(.ndp-selected) .ndp-day-nep { color: var(--ndp-sunday); }
+
+/* ============================================
+   Footer
+   ============================================ */
+.ndp-footer {
+    display: flex;
+    gap: 8px;
+    padding: 14px;
+    background: var(--ndp-bg-secondary);
+    border-top: 1px solid var(--ndp-border-light);
+}
+
+.ndp-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    font-family: var(--ndp-font-nepali);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--ndp-radius-md);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    border: none;
+}
+
+.ndp-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.ndp-btn-primary {
+    background: var(--ndp-accent-gradient);
+    color: white;
+}
+
+.ndp-btn-primary:hover {
+    box-shadow: var(--ndp-shadow-md);
+    transform: translateY(-1px);
+}
+
+.ndp-btn-secondary {
+    background: var(--ndp-bg-primary);
+    color: var(--ndp-text-secondary);
+    border: 1px solid var(--ndp-border-medium);
+}
+
+.ndp-btn-secondary:hover {
+    background: var(--ndp-bg-tertiary);
+    color: var(--ndp-text-primary);
+}
+
+.ndp-btn-ghost {
+    background: transparent;
+    color: var(--ndp-text-tertiary);
+}
+
+.ndp-btn-ghost:hover {
+    background: var(--ndp-bg-tertiary);
+    color: var(--ndp-text-primary);
+}
+
+/* ============================================
+   Selected Display
+   ============================================ */
+.ndp-display {
+    margin-top: 10px;
+    padding: 14px 16px;
+    background: var(--ndp-bg-secondary);
+    border: 1px solid var(--ndp-border-light);
+    border-radius: var(--ndp-radius-lg);
+    display: none;
+}
+
+.ndp-display.ndp-show {
+    display: block;
+}
+
+.ndp-display-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ndp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: var(--ndp-font-english);
+    margin-bottom: 4px;
+}
+
+.ndp-display-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ndp-text-primary);
+}
+
+.ndp-display-sub {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ndp-text-secondary);
+    font-family: var(--ndp-font-english);
+    margin-top: 2px;
+}
+
+/* ============================================
+   Mode Variants
+   ============================================ */
+.ndp-nepali-only .ndp-title-english,
+.ndp-nepali-only .ndp-weekday-eng,
+.ndp-nepali-only .ndp-day-eng,
+.ndp-nepali-only .ndp-display-sub,
+.ndp-nepali-only .ndp-month-eng,
+.ndp-nepali-only .ndp-year-eng {
+    display: none;
+}
+
+.ndp-english-only .ndp-title-nepali { display: none; }
+.ndp-english-only .ndp-title-english { font-size: 14px; }
+.ndp-english-only .ndp-weekday-nep { display: none; }
+.ndp-english-only .ndp-weekday-eng { font-size: 11px; color: var(--ndp-text-secondary); }
+.ndp-english-only .ndp-day-eng { display: none; }
+.ndp-english-only .ndp-day-nep { font-family: var(--ndp-font-english); }
+.ndp-english-only .ndp-month-nep { display: none; }
+.ndp-english-only .ndp-month-eng { font-size: 12px; color: var(--ndp-text-primary); }
+.ndp-english-only .ndp-year-nep { display: none; }
+.ndp-english-only .ndp-year-eng { font-size: 12px; color: var(--ndp-text-primary); }
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 400px) {
+    .ndp-calendar {
+        width: calc(100vw - 20px) !important;
+        max-width: 340px;
+    }
+    
+    .ndp-day-nep { font-size: 12px; }
+    .ndp-day-eng { font-size: 7px; }
+    .ndp-header { padding: 14px; }
+    .ndp-title-nepali { font-size: 15px; }
+    .ndp-title-btn { min-width: 130px; padding: 6px 14px; }
+    .ndp-days { padding: 8px; gap: 3px; }
+    .ndp-nav-btn { width: 34px; height: 34px; }
+}

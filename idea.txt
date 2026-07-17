@@ -1,0 +1,286 @@
+echo "# TAX-billing-system" >> README.md
+git init
+git add .
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/bibekchandsah/TAX-billing-system.git
+git push -u origin main
+
+git remote add origin https://github.com/bibekchandsah/TAX-billing-system.git
+git branch -M main
+git push -u origin main
+
+nepali date picker resource: https://nepalidate.omkumarpandey.com.np/datepicker.html
+
+VAT Bill Page
+-------------
+toggle selection: Sell / Purchase
+input box: 
+    Bill No * (should be auto generated in serial wise for both Sell and Purchase, max 4 digit with leading zeros, starts from 0001), 
+    date(BS) * (auto select today date, if user select older date than today date then stay on same date don't auto change to todays date), 
+    Customer name * (auto capital first letter of words), 
+    Address * (auto capital first letter of words), 
+    Contact Number (max 10 digit only), 
+    PAN/VAT No. * (max 9 digit only, only number allowed) (autofocus)
+
+* represents it's compulsary to enter items
+
+in items table
+--------------
+columns: 
+    S.N. *, 
+    Particular *, 
+    QTY *,
+    UNIT *, 
+    RATE * (support up to 2 decimals),
+    AMOUNT (auto QTY x rate)
+    Action (delete)
+
+| + Add Items | (this should be a button)
+should be able to add multiple items in items table
+
+Total (sum of amount of all items) (support up to 2 decimals)
+TAX/VAT % (bydefault 13%) (display (Total x tax/vat %) and tax/vat value next to it) (support up to 2 decimals)
+Total Amount with Tax (Total + tax/vat) (support up to 2 decimals)
+
+buttons:
+    Save (enable only when all compulsary items are filled and no error found),
+    Reset (clear all fields)
+
+
+
+Records page
+-------------
+should be work same as bill page but only for view 
+should be able to search by bill number, date, customer name, address, contact number, pan number, sale/purchase
+should be able to filter by date range (from date and to date)
+
+table: 
+columns:
+    bill number (from bill bill_number), 
+    date (from bill date), 
+    customer name (from bill customer_name), 
+    address (from bill address), 
+    contact number (from bill contact_number), 
+    type (from bill type) (sale/purchase),
+    total (from bill total)
+    total amount with tax (from bill total_amount_with_tax)
+    action (view (in popup/modal), edit (in popup/modal), download (in pdf), delete (in popup/modal))
+
+add pagination by default it should show of nepali calendar one month data on each page, and pagination should be for fiscal year only
+
+!!!
+pagination
+
+Ledger Page
+------------------
+1) Add New Customer (left container)
+--------------------------
+button: 
+| + New Customer |
+| search box | (search by customer name, address, phone number, pan number, purchase/sale)
+
+should show list of all customers
+in customer card:
+    Customer name
+    Address
+    Contact Number
+    PAN/VAT No.
+    current balance
+    sale/purchase status
+
+
+add new customer modal:
+input box:
+    Customer name * (should be same as in bill, auto capital first letter of words) (autofocus) 
+    type * (Purchase / Sale) (toggle selection)
+    Address * (should be same as in bill, auto capital first letter of words) 
+    Contact Number (should be same as in bill, max 10 digit only) 
+    PAN/VAT No. * (should be same as in bill, max 9 digit only, only number allowed)
+    Opening Balance (support up to 2 decimals) (optional)
+    if opening balance is entered then 
+        Date (BS) * (auto select today date, if user select older date than today date then stay on same date don't auto change to todays date)
+        Particular *
+        Bill Number *
+
+buttons:
+    Add Customer (enable only when all compulsary items are filled and no error found),
+    Cancel
+
+2) Customer Ledger List (right container)
+------------------------
+Customer name (edit icon, to edit customer details) (delete icon, to delete customer details & it's records)
+(address icon) address        (contact icon) contact number
+(PAN icon) PAN/VAT No.        (type icon) Purchase / Sale (from bill page)
+
+| From Date (BS) | To Date (BS) | (date picker for both) for table data filtering and print | print (for printing customer ledger of selected data range or all)
+
+cards shows:
+    Total (total amount of Total column)
+    Total Amount with tax (total amount of Total Amount with tax column)   
+
+table:
+columns: 
+    Date (BS), (From bill page)
+    Particular (bill_bill number), (From bill page)
+    Bill Number, (from bill page)
+    Total, (from bill page)
+    Total Amount with tax (from bill page)
+    action (edit, delete)
+
+
+Stock page
+---------------
+
+1) Add New Particular (left container)
+--------------------------
+button: 
+| + New Particular |
+| search box | (search by Particular name, particular ID)
+
+should show list of all items
+in Particular card:
+    Particular name
+    Particular ID
+    price
+    unit
+
+add new particular modal:
+input box:
+    Particular name * (should be same as in bill, auto capital first letter of words) (autofocus)
+    Particular ID * (auto generate when not entered, max 5 digit only with leading zeros, starts from 0001) 
+    Default Unit * (select from dropdown) 
+    Price * (support up to 2 decimals)
+    Initial Stock Quantity *  (support only number without decimal) 
+    if initial stock quantity is greater than 0 then 
+        Opening Date (BS) * (auto select today date, if user select older date than today date then stay on same date don't auto change to todays date)
+        Bill Number 
+
+buttons:
+    Add Particular (enable only when all compulsary items are filled and no error found),
+    Cancel
+
+2) Stock Table (right container)
+------------------------
+Particular name (edit icon, to edit Particular details) (delete icon, to delete particular details & it's records)
+(Unit icon) Unit
+
+| From Date (BS) | To Date (BS) | (date picker for both) for table data filtering and print | print (for printing stock ledger of selected data range or all)
+
+cards shows:
+    Current Stock 
+    Stock In
+    Amount In
+    Stock Out 
+    Amount Out
+
+table:
+columns: 
+    Date (BS), (From bill page)
+    Type (sale/purchase), (From bill page)
+    Bill Number, (from bill page)
+    Particular (Customer Name), (From bill page)
+    Stock In, (from bill page) (if purchase then show, if sale then show empty)
+    Amount In, (from bill page) (if purchase then show, if sale then show empty)
+    Stock Out, (from bill page) (if sale then show, if purchase then show empty)
+    Amount Out, (from bill page) (if sale then show, if purchase then show empty)
+    Current Stock, (stock in - stock out)
+    action (edit, delete) 
+
+
+
+settings page
+--------------
+Business Settings Profile:
+- Bill Title (editable, display in bill header)
+- Business Name (editable, display in bill header)
+- Business Address (editable, display in bill header)
+- Business Contact (editable, display in bill header)
+- PAN/VAT No. (editable, display in bill header)
+- VAT % (editable, support up to 2 decimals, bydefault 13%) (max 2 numerical digit)
+    this vat% will be used to calculate tax/vat% in bill page 
+
+Unit category:
+    list of all unit category (add/edit/delete unit category)
+    this unit will display in bill page in unit column, and in add new particular modal in default unit dropdown
+
+!!!
+Fiscal Year Settings:
+    Set the active fiscal year and configure the start/end months for your business year. In Nepal, the standard fiscal year runs from Shrawan to Ashadh. All records, dashboard stats, and reports will be filtered by the active fiscal year.
+    |2079-80| |2080-81| |2081-82| |2082-83|
+
+    Starting Month: (selected month in dropdown, bydefault Shrawan)
+    Ending Month: (selected month in dropdown, bydefault Ashadh)
+
+    auto add next 5 year from current year in grid, e.g if current year is 2082-83 then add 2083-84, 2084-85, 2085-86, 2086-87, 2087-88
+
+
+Install App/ PWA
+    should be installable as PWA
+    should be work in chrome, edge, safari, firefox, opera
+
+
+!!!
+Device Sessions & Security
+    should be able to change password
+    should be able to logout from all devices
+    should be able to see all devices logged in
+    should be able to see all sessions
+    should be able to logout all other devices 
+    should be able to revoke individual devices
+    should be able to see last login time of each device
+    should be able to see device type (android, ios, windows, mac, linux, other)
+    should be able to see device version
+
+Action Pin 
+    Protect edit and delete actions with a PIN. When set, users must enter the PIN before opening edit or delete flows.
+
+!!!
+Data Backup
+    Export all your records, stock, customers data as a backup file. A single .xlsx file (5 sheets) is created for one fiscal year, or a .zip of per-year Excel files for All Years.
+
+    Backup Destination Folder
+        Choose where backups will be automatically saved: Local folder path
+
+    Automatic Backup Reminder
+        Reminder Frequency: (daily, weekly, monthly, never)
+
+
+
+
+Features
+-------------
+- in bill page by entering the PAN/VAT number should auto fill the customer name, address, contact number if customer is exists in database else create new customer, with all the details
+
+- in bill page clickin in particular input box should show a modal with list of all particular data from stock page with search key arrow navigation support and enter to select and close modal
+
+- in bill page particular name is only valid if it matches with particular data from stock page, otherwise it should show error (should not be added to the bill table)
+
+- in bill page when particular is selected from stock modal then in price field should auto fill price from stock table data
+
+- in bill page unitl one row all fields is filled, user can't add the other item
+
+- in bill page in bill number field should auto fill next number based on the previous bill number (if first bill number is 100 then next bill number should be 101)
+
+- it should be stored in the firestore under users > {userId} > VAT/PAN > 
+    records
+    ledger
+    stock
+    settings
+    session
+
+
+
+
+
+in the stock page, before the particular name in right side panel can we show the "<", ">" icon which will toggle left side panel so that user can see the right side panel in full screen. animate show/hide of left side panel smoothly
+
+in stock page the popup modal of add new particular model don't show above the sidebar menu, and background blur effect not seen in the sidebar
+
+in add customer modal it shows extra spaces at bottom, make the date picker input box same as we have in vat bill page and for opening balance minimum value is 1, it's taking -1 too and pan/vat no. inputbox must contain 9 digit if it's 1-8 digit show error
+
+thought the input fields are compulsary it's not validating when user press save customer
+
+pan/vat no. input box is also compulsory but user is able to save without pan/vat data
+
+when user enter initial stock qty value then date value is compulsory and user is able to save without date value and by default it don't shows todays date if the specific date isn't selected
