@@ -485,6 +485,7 @@ const Settings = () => {
         requiredPin={originalPin}
         actionName="modify your Security PIN"
       />
+      <ChangePasswordModal isOpen={changePwdOpen} onClose={() => setChangePwdOpen(false)} />
     </div>
   );
 };
