@@ -39,10 +39,10 @@ export const useAppStore = create((set) => ({
   setSidebarOpen: (isOpen) => set({ sidebarOpen: isOpen }),
 
   toasts: [],
-  addToast: (message, type = 'info', autoDismiss = true) => {
+  addToast: (message, type = 'info', autoDismiss = true, actions = []) => {
     const id = Date.now();
     set((state) => ({
-      toasts: [...state.toasts, { id, message, type }]
+      toasts: [...state.toasts, { id, message, type, actions }]
     }));
     
     if (autoDismiss) {

@@ -3,6 +3,7 @@ import { Outlet, Navigate, NavLink, useNavigate, useLocation } from 'react-route
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { get } from 'idb-keyval';
+import { generateExcelBackup } from '../services/backup';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -104,6 +105,11 @@ const MainLayout = () => {
         const lastBackup = await get('lastBackupTime');
         const now = new Date();
         
+        const snoozeUntil = sessionStorage.getItem('backupSnooze');
+        if (snoozeUntil && now.getTime() < Number(snoozeUntil)) {
+          return;
+        }
+
         let shouldRemind = false;
         
         if (!lastBackup) {
@@ -129,7 +135,28 @@ const MainLayout = () => {
         
         // Remind once per page load to ensure they see it, but don't spam intervals
         if (shouldRemind && !backupRemindedRef.current) {
-          useAppStore.getState().addToast('Backup Reminder: It is time to back up your data. Please go to Settings > Data Backup.', 'info', false);
+          useAppStore.getState().addToast('Backup Reminder: It is time to back up your data.', 'info', false, [
+            { 
+              label: 'Backup Now', 
+              primary: true, 
+              onClick: async () => {
+                useAppStore.getState().addToast('Exporting backup...', 'info');
+                try {
+                  await generateExcelBackup(user.uid);
+                  useAppStore.getState().addToast('Backup exported successfully!', 'success');
+                } catch (err) {
+                  useAppStore.getState().addToast('Backup failed.', 'error');
+                }
+              } 
+            },
+            {
+              label: 'Remind in 20 min',
+              onClick: () => {
+                sessionStorage.setItem('backupSnooze', (Date.now() + 20 * 60 * 1000).toString());
+                backupRemindedRef.current = false;
+              }
+            }
+          ]);
           backupRemindedRef.current = true;
         }
       } catch (e) {
