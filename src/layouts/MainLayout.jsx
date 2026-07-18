@@ -23,7 +23,9 @@ import {
   Upload,
   Trash2,
   Edit2,
-  Check
+  Check,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import styles from './MainLayout.module.css';
 
@@ -128,6 +130,18 @@ const MainLayout = () => {
       } catch (_) {}
     }
   }, []);
+
+  const handlePrevFY = () => {
+    if (!activeFiscalYear) return;
+    const startYear = parseInt(activeFiscalYear.split('-')[0], 10);
+    setActiveFiscalYear(getFiscalYearLabel(startYear - 1));
+  };
+  
+  const handleNextFY = () => {
+    if (!activeFiscalYear) return;
+    const startYear = parseInt(activeFiscalYear.split('-')[0], 10);
+    setActiveFiscalYear(getFiscalYearLabel(startYear + 1));
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -306,15 +320,23 @@ const MainLayout = () => {
           
           <div className={styles.topbarRight}>
             {/* Fiscal Year Selector */}
-            <div className={styles.fySelector} ref={fyDropdownRef}>
-              <button
-                className={styles.fyBtn}
-                onClick={() => setIsFYDropdownOpen(prev => !prev)}
-                title="Switch Fiscal Year"
-              >
-                <span>FY {activeFiscalYear || '—'}</span>
-                <ChevronDown size={14} style={{ transform: isFYDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-              </button>
+            <div className={styles.fySelectorContainer} ref={fyDropdownRef}>
+              <div className={styles.fySelector}>
+                <button className={styles.fyNavBtn} onClick={handlePrevFY} title="Previous Fiscal Year">
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  className={styles.fyBtn}
+                  onClick={() => setIsFYDropdownOpen(prev => !prev)}
+                  title="Switch Fiscal Year"
+                >
+                  <span>FY {activeFiscalYear || '—'}</span>
+                  <ChevronDown size={14} style={{ transform: isFYDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
+                <button className={styles.fyNavBtn} onClick={handleNextFY} title="Next Fiscal Year">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
               {isFYDropdownOpen && (
                 <div className={styles.fyDropdown}>
                   <div className={styles.fyDropdownHeader}>SELECT FISCAL YEAR</div>
