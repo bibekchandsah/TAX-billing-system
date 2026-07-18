@@ -166,6 +166,24 @@ const Settings = () => {
     }
   };
 
+  const handleLogoutAllOther = async () => {
+    try {
+      await logoutAllOtherDevices();
+      addToast('All other devices have been signed out.', 'success');
+    } catch (err) {
+      addToast('Failed to sign out other devices.', 'error');
+    }
+  };
+
+  const handleRevokeSession = async (sid) => {
+    try {
+      await revokeSession(sid);
+      addToast('Device session revoked.', 'success');
+    } catch (err) {
+      addToast('Failed to revoke session.', 'error');
+    }
+  };
+
   return (
     <div className={`animate-fade-in ${styles.container}`}>
 
@@ -398,7 +416,7 @@ const Settings = () => {
             Active Device Sessions ({sessions.length})
           </h3>
           {sessions.length > 1 && (
-            <button type="button" onClick={logoutAllOtherDevices} style={{background: 'none', border: 'none', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', padding: 0}}>
+            <button type="button" onClick={handleLogoutAllOther} style={{background: 'none', border: 'none', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', padding: 0}}>
               Logout All Other Devices
             </button>
           )}
@@ -443,7 +461,7 @@ const Settings = () => {
                   </div>
                 </div>
                 {!isCurrent && (
-                  <button type="button" onClick={() => revokeSession(s.id)} title="Revoke session"
+                  <button type="button" onClick={() => handleRevokeSession(s.id)} title="Revoke session"
                     style={{ background: 'var(--bg-tertiary, var(--border-color))', border: 'none', borderRadius: '0.4rem', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0.4rem 0.5rem', display: 'flex', alignItems: 'center', transition: 'background 0.2s, color 0.2s', flexShrink: 0 }}
                     onMouseEnter={e => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-tertiary, var(--border-color))'; e.currentTarget.style.color = 'var(--text-secondary)'; }}

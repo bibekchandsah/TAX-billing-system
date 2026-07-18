@@ -6,7 +6,7 @@ import { useAppStore } from '../store/appStore';
 import styles from './ActionPinModal.module.css';
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
-  const { changePassword } = useAuthStore();
+  const { changePassword, logoutAllOtherDevices } = useAuthStore();
   const { addToast } = useAppStore();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -34,7 +34,9 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       await changePassword(oldPassword, newPassword);
-      addToast('Password changed successfully!', 'success');
+      // After password change, logout all other devices for security
+      try { await logoutAllOtherDevices(); } catch(e) {}
+      addToast('Password changed! All other devices have been signed out.', 'success');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
