@@ -320,6 +320,13 @@ const VATBill = () => {
     
     setLoading(true);
     try {
+      const existingCustomer = await getCustomerByPan(user.uid, customer.pan);
+      if (existingCustomer && existingCustomer.customerName.toLowerCase() !== customer.name.toLowerCase()) {
+        addToast(`PAN/VAT No. already exists for customer "${existingCustomer.customerName}".`, 'error');
+        setLoading(false);
+        return;
+      }
+
       const billData = {
         type,
         billNumber: billNo,

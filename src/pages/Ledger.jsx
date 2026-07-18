@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuthStore } from '../store/authStore';
+import { useAppStore } from '../store/appStore';
 import { getCustomers, addCustomer, updateCustomer, getSettings, deleteRecord, getBills } from '../services/db';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -14,6 +15,7 @@ import styles from './Ledger.module.css';
 
 const Ledger = () => {
   const { user } = useAuthStore();
+  const { addToast } = useAppStore();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -229,13 +231,28 @@ const Ledger = () => {
     e.preventDefault();
     
     if (!formData.panVatNo || formData.panVatNo.length !== 9) {
-      alert("PAN/VAT No. must be exactly 9 digits.");
+      addToast("PAN/VAT No. must be exactly 9 digits.", "error");
       return;
     }
 
     if (formData.openingBalance && !formData.date) {
-      alert("Date is required when Opening Balance is entered.");
+      addToast("Date is required when Opening Balance is entered.", "error");
       return;
+    }
+
+    // Check for duplicate PAN/VAT No.
+    if (isEditingCustomer) {
+      const exists = customers.find(c => c.panVatNo === formData.panVatNo && c.id !== customerToEdit.id);
+      if (exists) {
+        addToast(`PAN/VAT No. already exists for customer "${exists.customerName}".`, 'error');
+        return;
+      }
+    } else {
+      const exists = customers.find(c => c.panVatNo === formData.panVatNo);
+      if (exists) {
+        addToast(`PAN/VAT No. already exists for customer "${exists.customerName}".`, 'error');
+        return;
+      }
     }
 
     try {
