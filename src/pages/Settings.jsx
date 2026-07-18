@@ -298,8 +298,8 @@ const Settings = () => {
                       style={{
                         padding: '6px 14px',
                         borderRadius: '8px',
-                        border: fy === activeFiscalYear ? '2px solid var(--primary)' : '1px solid var(--border)',
-                        background: fy === activeFiscalYear ? 'var(--primary)' : 'var(--bg-card)',
+                        border: fy === activeFiscalYear ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                        background: fy === activeFiscalYear ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                         color: fy === activeFiscalYear ? 'white' : 'var(--text-primary)',
                         fontWeight: fy === activeFiscalYear ? 700 : 500,
                         fontSize: '0.85rem',
@@ -349,23 +349,23 @@ const Settings = () => {
               const endYear = startYear + 1;
               return (
                 <div style={{
-                  background: 'var(--bg-secondary)', borderRadius: '10px',
+                  background: 'var(--bg-tertiary)', borderRadius: '10px',
                   padding: '16px', marginTop: '4px',
-                  border: '1px solid var(--border)'
+                  border: '1px solid var(--border-color)'
                 }}>
                   <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>Fiscal Year Range Preview</label>
                   <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: 4 }}>Active Year</div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary)' }}>{activeFiscalYear}</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{activeFiscalYear}</div>
                     </div>
-                    <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '24px' }}>
+                    <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '24px' }}>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: 4 }}>Starts</div>
-                      <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{NEPALI_MONTHS[startMonthIdx - 1]} {startYear}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{NEPALI_MONTHS[startMonthIdx - 1]} {startYear}</div>
                     </div>
-                    <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '24px' }}>
+                    <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '24px' }}>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: 4 }}>Ends</div>
-                      <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{NEPALI_MONTHS[endMonthIdx - 1]} {endYear}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{NEPALI_MONTHS[endMonthIdx - 1]} {endYear}</div>
                     </div>
                   </div>
                 </div>

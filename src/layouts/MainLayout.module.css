@@ -640,8 +640,8 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
   font-size: 0.8rem;
   font-weight: 600;
@@ -651,8 +651,8 @@
 }
 
 .fyBtn:hover {
-  border-color: var(--primary);
-  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  background: var(--bg-tertiary);
 }
 
 .fyDropdown {
@@ -660,8 +660,8 @@
   top: calc(100% + 8px);
   right: 0;
   min-width: 180px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.2);
   z-index: 100;
@@ -675,7 +675,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .fyDropdownList {
@@ -700,17 +700,17 @@
 }
 
 .fyDropdownItem:hover {
-  background: var(--bg-hover);
+  background: var(--bg-tertiary);
 }
 
 .fyDropdownItemActive {
-  color: var(--primary);
+  color: var(--accent-primary);
   font-weight: 700;
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
 }
 
 .fyCheckmark {
   font-size: 0.75rem;
-  color: var(--primary);
+  color: var(--accent-primary);
   min-width: 14px;
 }

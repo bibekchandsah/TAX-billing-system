@@ -296,8 +296,8 @@ const Records = () => {
               <span style={{
                 fontSize: '0.78rem', fontWeight: 700,
                 padding: '4px 10px', borderRadius: '20px',
-                background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
-                color: 'var(--primary)', border: '1px solid var(--primary)',
+                background: 'color-mix(in srgb, var(--accent-primary) 12%, transparent)',
+                color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)',
                 whiteSpace: 'nowrap'
               }}>
                 FY {activeFiscalYear}
