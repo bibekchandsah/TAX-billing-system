@@ -97,8 +97,10 @@ export const generateExcelBackup = async (userId) => {
     XLSX.utils.book_append_sheet(wb, wsSettings, "System Settings");
 
     // Generate date string for filename
-    const dateStr = new Date().toISOString().split('T')[0];
-    const fileName = `VAT_Billing_Backup_${dateStr}.xlsx`;
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = `${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
+    const fileName = `VAT_Billing_Backup_${dateStr}_${timeStr}.xlsx`;
 
     // Trigger download or save to folder
     const { get, set } = await import('idb-keyval');

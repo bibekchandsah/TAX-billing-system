@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import styles from './MainLayout.module.css';
 
+import { getSettings } from '../services/db';
+
 const MainLayout = () => {
   const { user, profile, logout, updateProfilePhoto } = useAuthStore();
   const { theme, toggleTheme, sidebarOpen, toggleSidebar } = useAppStore();
@@ -84,15 +86,21 @@ const MainLayout = () => {
   }, []);
 
   useEffect(() => {
-    if (!profile) return;
-    const frequency = profile.backupReminderFrequency;
-    if (!frequency || frequency === 'never') return;
+    if (!user) return;
     
-    const time = profile.backupReminderTime || '17:00';
-    const [hours, minutes] = time.split(':').map(Number);
+    let intervalId;
 
     const checkBackupReminder = async () => {
       try {
+        const settings = await getSettings(user.uid);
+        if (!settings) return;
+        
+        const frequency = settings.backupReminderFrequency;
+        if (!frequency || frequency === 'never') return;
+        
+        const time = settings.backupReminderTime || '17:00';
+        const [hours, minutes] = time.split(':').map(Number);
+
         const lastBackup = await get('lastBackupTime');
         const now = new Date();
         
@@ -133,9 +141,9 @@ const MainLayout = () => {
     checkBackupReminder();
     
     // Check every minute if the app stays open
-    const intervalId = setInterval(checkBackupReminder, 60000);
+    intervalId = setInterval(checkBackupReminder, 60000);
     return () => clearInterval(intervalId);
-  }, [profile]);
+  }, [user]);
 
   if (!user) {
     return <Navigate to="/login" replace />;
