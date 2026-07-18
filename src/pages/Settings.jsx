@@ -47,26 +47,47 @@ const Settings = () => {
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
       setIsAppInstalled(true);
+      return;
     }
 
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
+    // Pick up the prompt if it already fired before this component mounted
+    if (window.__pwaInstallPrompt) {
+      setDeferredPrompt(window.__pwaInstallPrompt);
+    }
 
-    const handleAppInstalled = () => {
+    // Listen for prompt becoming available after mount
+    const onPromptReady = () => {
+      setDeferredPrompt(window.__pwaInstallPrompt);
+      setIsAppInstalled(false);
+    };
+    const onInstalled = () => {
       setIsAppInstalled(true);
       setDeferredPrompt(null);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('pwaPromptReady', onPromptReady);
+    window.addEventListener('pwaInstalled', onInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('pwaPromptReady', onPromptReady);
+      window.removeEventListener('pwaInstalled', onInstalled);
     };
   }, []);
+
+  const handleInstallClick = async () => {
+    const prompt = deferredPrompt || window.__pwaInstallPrompt;
+    if (prompt) {
+      prompt.prompt();
+      const { outcome } = await prompt.userChoice;
+      if (outcome === 'accepted') {
+        window.__pwaInstallPrompt = null;
+        setDeferredPrompt(null);
+        setIsAppInstalled(true);
+      }
+    } else {
+      addToast('Open your browser menu and choose "Add to Home Screen" or "Install App" to install.', 'info');
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -84,17 +105,7 @@ const Settings = () => {
     return () => unsubscribe();
   }, [user, sessionId]);
 
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
-    } else {
-      alert("Installation prompt is not ready. You can still install the app directly from your browser's address bar or menu (e.g., 'Add to Home Screen').");
-    }
-  };
+
 
   useEffect(() => {
     if (user) loadSettings();
