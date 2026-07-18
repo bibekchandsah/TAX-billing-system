@@ -334,104 +334,6 @@ const Settings = () => {
             </button>
           </div>
 
-          {/* Security & Sessions */}
-          <div className={`${styles.card} glass-panel`}>
-            <div className={styles.cardHeaderIcon}>
-              <Shield size={24} className={styles.iconPrimary} />
-              <h2 className="heading-2" style={{marginBottom: 0}}>Device Sessions & Security</h2>
-            </div>
-            <p className={styles.description}>View and manage devices where you're currently logged in. You can revoke access from unfamiliar devices for security.</p>
-
-            {/* Change Password row */}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid var(--border-color)', marginBottom: '1.5rem'}}>
-              <span style={{fontWeight: 600}}>Change Password</span>
-              <button type="button" className="btn-secondary" onClick={() => setChangePwdOpen(true)} style={{gap: '0.4rem'}}>
-                <Key size={16} /> Change Password
-              </button>
-            </div>
-
-            {/* Active Sessions Header */}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem'}}>
-              <h3 style={{fontWeight: 700, fontSize: '1rem', margin: 0}}>
-                Active Device Sessions ({sessions.length})
-              </h3>
-              {sessions.length > 1 && (
-                <button type="button" onClick={logoutAllOtherDevices} style={{background: 'none', border: 'none', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', padding: 0}}>
-                  Logout All Other Devices
-                </button>
-              )}
-            </div>
-            <p style={{fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '1rem', margin: '0 0 1rem'}}>
-              These are the devices currently logged into your account. Revoke access from unfamiliar devices.
-            </p>
-
-            {/* Sessions List */}
-            <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '320px', overflowY: 'auto', paddingRight: '2px'}}>
-              {sessions.length === 0 ? (
-                <p style={{color: 'var(--text-secondary)', textAlign: 'center', padding: '1rem'}}>No active sessions found.</p>
-              ) : sessions.map(s => {
-                const isCurrent = s.id === sessionId;
-                return (
-                  <div key={s.id} style={{
-                    display: 'flex', alignItems: 'center', gap: '0.75rem',
-                    padding: '0.9rem 1rem',
-                    borderRadius: '0.6rem',
-                    border: isCurrent ? '2px solid var(--primary)' : '1px solid var(--border-color)',
-                    background: 'var(--bg-secondary)',
-                    transition: 'border-color 0.2s'
-                  }}>
-                    {/* Device Icon */}
-                    <div style={{
-                      background: isCurrent ? 'rgba(59,130,246,0.15)' : 'var(--bg-tertiary, var(--bg-primary))',
-                      borderRadius: '0.5rem', padding: '0.6rem',
-                      color: isCurrent ? 'var(--primary)' : 'var(--text-secondary)',
-                      flexShrink: 0
-                    }}>
-                      {(s.deviceType === 'iOS' || s.deviceType === 'Android') ? <Smartphone size={20} /> : <Monitor size={20} />}
-                    </div>
-
-                    {/* Device Info */}
-                    <div style={{flex: 1, minWidth: 0}}>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap'}}>
-                        <span style={{fontWeight: 700, fontSize: '0.95rem'}}>{s.deviceType} - {s.deviceVersion}</span>
-                        {isCurrent && (
-                          <span style={{
-                            background: 'var(--primary)', color: '#fff',
-                            fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.05em',
-                            padding: '0.15rem 0.5rem', borderRadius: '999px', textTransform: 'uppercase'
-                          }}>Current Device</span>
-                        )}
-                      </div>
-                      <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.25rem'}}>
-                        <Clock size={12} />
-                        Last active {s.lastActive ? new Date(s.lastActive).toLocaleString() : 'Unknown'}
-                      </div>
-                    </div>
-
-                    {/* Revoke button */}
-                    {!isCurrent && (
-                      <button
-                        type="button"
-                        onClick={() => revokeSession(s.id)}
-                        title="Revoke session"
-                        style={{
-                          background: 'var(--bg-tertiary, var(--border-color))',
-                          border: 'none', borderRadius: '0.4rem',
-                          color: 'var(--text-secondary)', cursor: 'pointer',
-                          padding: '0.4rem 0.5rem', display: 'flex', alignItems: 'center',
-                          transition: 'background 0.2s, color 0.2s', flexShrink: 0
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-tertiary, var(--border-color))'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
 
           {/* App Installation */}
           <div className={`${styles.card} glass-panel`}>
@@ -473,6 +375,87 @@ const Settings = () => {
         </div>
 
       </form>
+
+      {/* Device Sessions & Security - full width below form */}
+      <div className={`${styles.card} glass-panel`} style={{marginTop: '1.5rem'}}>
+        <div className={styles.cardHeaderIcon}>
+          <Shield size={24} className={styles.iconPrimary} />
+          <h2 className="heading-2" style={{marginBottom: 0}}>Device Sessions & Security</h2>
+        </div>
+        <p className={styles.description}>View and manage devices where you're currently logged in. You can revoke access from unfamiliar devices for security.</p>
+
+        {/* Change Password row */}
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid var(--border-color)', marginBottom: '1.5rem'}}>
+          <span style={{fontWeight: 600}}>Change Password</span>
+          <button type="button" className="btn-secondary" onClick={() => setChangePwdOpen(true)} style={{gap: '0.4rem'}}>
+            <Key size={16} /> Change Password
+          </button>
+        </div>
+
+        {/* Active Sessions Header */}
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem'}}>
+          <h3 style={{fontWeight: 700, fontSize: '1rem', margin: 0}}>
+            Active Device Sessions ({sessions.length})
+          </h3>
+          {sessions.length > 1 && (
+            <button type="button" onClick={logoutAllOtherDevices} style={{background: 'none', border: 'none', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', padding: 0}}>
+              Logout All Other Devices
+            </button>
+          )}
+        </div>
+        <p style={{fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', margin: '0 0 1rem'}}>
+          These are the devices currently logged into your account. Revoke access from unfamiliar devices.
+        </p>
+
+        {/* Sessions List */}
+        <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '400px', overflowY: 'auto'}}>
+          {sessions.length === 0 ? (
+            <p style={{color: 'var(--text-secondary)', textAlign: 'center', padding: '1rem'}}>No active sessions found.</p>
+          ) : sessions.map(s => {
+            const isCurrent = s.id === sessionId;
+            return (
+              <div key={s.id} style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.9rem 1rem', borderRadius: '0.6rem',
+                border: isCurrent ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+                background: 'var(--bg-secondary)'
+              }}>
+                <div style={{
+                  background: isCurrent ? 'rgba(59,130,246,0.15)' : 'var(--bg-tertiary, var(--bg-primary))',
+                  borderRadius: '0.5rem', padding: '0.6rem',
+                  color: isCurrent ? 'var(--primary)' : 'var(--text-secondary)', flexShrink: 0
+                }}>
+                  {(s.deviceType === 'iOS' || s.deviceType === 'Android') ? <Smartphone size={20} /> : <Monitor size={20} />}
+                </div>
+                <div style={{flex: 1, minWidth: 0}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap'}}>
+                    <span style={{fontWeight: 700, fontSize: '0.95rem'}}>{s.deviceType} - {s.deviceVersion}</span>
+                    {isCurrent && (
+                      <span style={{
+                        background: 'var(--primary)', color: '#fff',
+                        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.05em',
+                        padding: '0.15rem 0.5rem', borderRadius: '999px', textTransform: 'uppercase'
+                      }}>Current Device</span>
+                    )}
+                  </div>
+                  <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.25rem'}}>
+                    <Clock size={12} /> Last active {s.lastActive ? new Date(s.lastActive).toLocaleString() : 'Unknown'}
+                  </div>
+                </div>
+                {!isCurrent && (
+                  <button type="button" onClick={() => revokeSession(s.id)} title="Revoke session"
+                    style={{ background: 'var(--bg-tertiary, var(--border-color))', border: 'none', borderRadius: '0.4rem', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0.4rem 0.5rem', display: 'flex', alignItems: 'center', transition: 'background 0.2s, color 0.2s', flexShrink: 0 }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-tertiary, var(--border-color))'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <ActionPinModal 
         isOpen={pinModalOpen} 
