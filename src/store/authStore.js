@@ -143,6 +143,25 @@ export const useAuthStore = create((set, get) => ({
       throw error;
     }
   },
+
+  updateProfileName: async (businessName) => {
+    const { user, profile } = get();
+    if (!user) return;
+    
+    set({ loading: true, error: null });
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, { businessName }, { merge: true });
+      
+      const settingsRef = doc(db, 'users', user.uid, 'settings', 'profile');
+      await setDoc(settingsRef, { businessName }, { merge: true });
+      
+      set({ profile: { ...profile, businessName }, loading: false });
+    } catch (error) {
+      set({ error: error.message, loading: false });
+      throw error;
+    }
+  },
   logout: async () => {
     set({ loading: true, error: null });
     try {

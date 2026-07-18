@@ -20,14 +20,16 @@ import {
   ChevronUp,
   Camera,
   Upload,
-  Trash2
+  Trash2,
+  Edit2,
+  Check
 } from 'lucide-react';
 import styles from './MainLayout.module.css';
 
 import { getSettings } from '../services/db';
 
 const MainLayout = () => {
-  const { user, profile, logout, updateProfilePhoto } = useAuthStore();
+  const { user, profile, logout, updateProfilePhoto, updateProfileName } = useAuthStore();
   const { theme, toggleTheme, sidebarOpen, toggleSidebar } = useAppStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,9 +37,32 @@ const MainLayout = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState('');
+  
   const profileRef = useRef(null);
   const fileInputRef = useRef(null);
   const backupRemindedRef = useRef(false);
+
+  const handleEditNameClick = () => {
+    setEditNameValue(profile?.businessName || user.email.split('@')[0]);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!editNameValue.trim()) return;
+    try {
+      setIsUploading(true);
+      await updateProfileName(editNameValue.trim());
+      setIsEditingName(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update name.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handlePhotoUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -367,7 +392,48 @@ const MainLayout = () => {
                 </div>
               </div>
               
-              <div className={styles.modalName}>{profile?.businessName || user.email.split('@')[0]}</div>
+              {isEditingName ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', marginTop: '16px', marginBottom: '4px' }}>
+                  <input
+                    type="text"
+                    value={editNameValue}
+                    onChange={(e) => setEditNameValue(e.target.value)}
+                    className="input-field"
+                    style={{ margin: 0, padding: '4px 8px', fontSize: '1.2rem', textAlign: 'center', width: '200px' }}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveName();
+                      if (e.key === 'Escape') setIsEditingName(false);
+                    }}
+                    disabled={isUploading}
+                  />
+                  <button 
+                    onClick={handleSaveName} 
+                    disabled={isUploading}
+                    style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', padding: '4px', cursor: 'pointer', display: 'flex' }}
+                  >
+                    <Check size={18} />
+                  </button>
+                  <button 
+                    onClick={() => setIsEditingName(false)} 
+                    disabled={isUploading}
+                    style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '4px', padding: '4px', cursor: 'pointer', display: 'flex' }}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.modalName} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <span>{profile?.businessName || user.email.split('@')[0]}</span>
+                  <button 
+                    onClick={handleEditNameClick}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                    title="Edit Name"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                </div>
+              )}
               <div className={styles.modalEmail}>{user.email}</div>
               
               <div className={styles.modalActions}>
