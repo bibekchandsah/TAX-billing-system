@@ -67,16 +67,8 @@ const Ledger = () => {
     }
   }, [selectedCustomer]);
 
-  // When fiscal year changes, reset date filters to FY range
-  useEffect(() => {
-    if (activeFiscalYear) {
-      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
-      const startMonthIdx = getMonthIndex(startMonth);
-      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
-      setFromDate(range.from);
-      setToDate(range.to);
-    }
-  }, [activeFiscalYear, settings]);
+  // We removed the useEffect that auto-populated fromDate and toDate from activeFiscalYear.
+  // The filtering logic below now applies the FY date range transparently in the background if fromDate/toDate are empty.
 
   const loadCustomers = async () => {
     setLoading(true);
@@ -302,8 +294,19 @@ const Ledger = () => {
   );
 
   const filteredEntries = ledgerEntries.filter(entry => {
-    if (fromDate && entry.date < fromDate) return false;
-    if (toDate && entry.date > toDate) return false;
+    let effFromDate = fromDate;
+    let effToDate = toDate;
+    
+    if (!fromDate && !toDate && activeFiscalYear) {
+      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
+      const startMonthIdx = getMonthIndex(startMonth);
+      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+      effFromDate = range.from;
+      effToDate = range.to;
+    }
+
+    if (effFromDate && entry.date < effFromDate) return false;
+    if (effToDate && entry.date > effToDate) return false;
     return true;
   });
 

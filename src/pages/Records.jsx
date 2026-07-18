@@ -39,21 +39,8 @@ const Records = () => {
     }
   }, [user]);
 
-  // When fiscal year changes, reset date filters to FY range
-  useEffect(() => {
-    if (activeFiscalYear && settings) {
-      const startMonth = settings.fiscalYearStartMonth || 'Shrawan';
-      const startMonthIdx = getMonthIndex(startMonth);
-      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
-      setFromDate(range.from);
-      setToDate(range.to);
-    } else if (activeFiscalYear) {
-      // Use default Shrawan if settings not loaded yet
-      const range = getFiscalYearDateRange(activeFiscalYear, 4);
-      setFromDate(range.from);
-      setToDate(range.to);
-    }
-  }, [activeFiscalYear, settings]);
+  // We removed the useEffect that auto-populated fromDate and toDate from activeFiscalYear.
+  // The filtering logic below now applies the FY date range transparently in the background if fromDate/toDate are empty.
 
   const loadBills = async () => {
     setLoading(true);
@@ -262,8 +249,19 @@ const Records = () => {
       bill.panVatNo.includes(searchTerm) ||
       bill.type.toLowerCase().includes(searchTerm.toLowerCase());
       
-    const matchesFromDate = fromDate ? bill.date >= fromDate : true;
-    const matchesToDate = toDate ? bill.date <= toDate : true;
+    let effFromDate = fromDate;
+    let effToDate = toDate;
+    
+    if (!fromDate && !toDate && activeFiscalYear) {
+      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
+      const startMonthIdx = getMonthIndex(startMonth);
+      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+      effFromDate = range.from;
+      effToDate = range.to;
+    }
+
+    const matchesFromDate = effFromDate ? bill.date >= effFromDate : true;
+    const matchesToDate = effToDate ? bill.date <= effToDate : true;
 
     return matchesSearch && matchesFromDate && matchesToDate;
   });
@@ -292,17 +290,6 @@ const Records = () => {
             )}
           </div>
           <div className={styles.filters}>
-            {activeFiscalYear && (
-              <span style={{
-                fontSize: '0.78rem', fontWeight: 700,
-                padding: '4px 10px', borderRadius: '20px',
-                background: 'color-mix(in srgb, var(--accent-primary) 12%, transparent)',
-                color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)',
-                whiteSpace: 'nowrap'
-              }}>
-                FY {activeFiscalYear}
-              </span>
-            )}
             <div className={styles.dateWrapper}>
               <NepaliDatePicker value={fromDate} onChange={setFromDate} placeholder="From Date" />
             </div>
