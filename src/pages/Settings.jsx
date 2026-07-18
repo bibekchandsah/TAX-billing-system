@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { getSettings, updateSettings } from '../services/db';
 import { generateExcelBackup } from '../services/backup';
+import { NEPALI_MONTHS, getMonthIndex, getFiscalYearLabel, getAvailableFiscalYears, getFiscalYearDateRange, getTodayBSDateString, detectCurrentFiscalYear } from '../utils/fiscalYear';
 import { Save, LogOut, Shield, Download, Lock, Calendar, Plus, Trash2, Edit2, Smartphone, CheckCircle, Eye, EyeOff, Key, Monitor, Clock, X, FolderOpen } from 'lucide-react';
 import ActionPinModal from '../components/ActionPinModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
@@ -13,7 +14,7 @@ import styles from './Settings.module.css';
 
 const Settings = () => {
   const { user, profile, logout, sessionId, revokeSession, logoutAllOtherDevices } = useAuthStore();
-  const { addToast } = useAppStore();
+  const { addToast, activeFiscalYear, setActiveFiscalYear } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   
@@ -271,49 +272,122 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Unit & Fiscal Year */}
+          {/* Fiscal Year Section (full redesign) */}
           <div className={`${styles.card} glass-panel`}>
-            <h2 className="heading-2">Configuration</h2>
-            <p className={styles.description}>Manage default units and fiscal year boundaries.</p>
-            
-            <div className={styles.configGrid}>
-              <div>
-                <label className="form-label"><Calendar size={16} style={{display:'inline', marginBottom:'-2px'}}/> Fiscal Year Setup</label>
-                <div className={styles.fiscalBox}>
-                  <div className="form-group">
-                    <label className="form-label" style={{fontSize: '0.75rem'}}>Start Month</label>
-                    <select className="input-field" name="fiscalYearStartMonth" value={formData.fiscalYearStartMonth} onChange={handleInputChange}>
-                      <option value="Baisakh">Baisakh</option>
-                      <option value="Shrawan">Shrawan</option>
-                      <option value="Mangsir">Mangsir</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label" style={{fontSize: '0.75rem'}}>End Month</label>
-                    <select className="input-field" name="fiscalYearEndMonth" value={formData.fiscalYearEndMonth} onChange={handleInputChange}>
-                      <option value="Ashadh">Ashadh</option>
-                      <option value="Chaitra">Chaitra</option>
-                      <option value="Kartik">Kartik</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+            <h2 className="heading-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Calendar size={20} /> Fiscal Year Settings
+            </h2>
+            <p className={styles.description}>
+              Set the active fiscal year. In Nepal, the standard fiscal year runs from <strong>Shrawan</strong> to <strong>Ashadh</strong>.
+              All records, dashboard stats, and reports will be filtered by the active fiscal year.
+            </p>
 
-              <div>
-                <label className="form-label">Unit Categories</label>
-                <div className={styles.unitList}>
-                  {formData.units.map(unit => (
-                    <div key={unit} className={styles.unitItem}>
-                      {unit}
-                      <button type="button" onClick={() => handleRemoveUnit(unit)} className={styles.unitDelBtn}><Trash2 size={14}/></button>
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.addUnitBox}>
-                  <input type="text" className="input-field" placeholder="Add unit (e.g. Box)" value={newUnit} onChange={(e)=>setNewUnit(e.target.value)} />
-                  <button type="button" className="btn-secondary" onClick={handleAddUnit}><Plus size={16}/></button>
-                </div>
+            {/* Year Pills */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label className="form-label">Active Fiscal Year</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                {(() => {
+                  const todayStr = getTodayBSDateString();
+                  const currentFY = detectCurrentFiscalYear(todayStr, formData.fiscalYearStartMonth || 'Shrawan');
+                  const startYear = parseInt((activeFiscalYear || currentFY || '2083-84').split('-')[0], 10);
+                  return getAvailableFiscalYears(startYear).map(fy => (
+                    <button
+                      key={fy}
+                      type="button"
+                      onClick={() => setActiveFiscalYear(fy)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '8px',
+                        border: fy === activeFiscalYear ? '2px solid var(--primary)' : '1px solid var(--border)',
+                        background: fy === activeFiscalYear ? 'var(--primary)' : 'var(--bg-card)',
+                        color: fy === activeFiscalYear ? 'white' : 'var(--text-primary)',
+                        fontWeight: fy === activeFiscalYear ? 700 : 500,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {fy}
+                    </button>
+                  ));
+                })()}
               </div>
+              {activeFiscalYear && (
+                <p style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                  Selected: <strong>{activeFiscalYear}</strong> — Dashboard and Records will show data for this year only.
+                </p>
+              )}
+            </div>
+
+            {/* Month Selectors */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div className="form-group">
+                <label className="form-label">Fiscal Year Start Month</label>
+                <select className="input-field" name="fiscalYearStartMonth" value={formData.fiscalYearStartMonth} onChange={handleInputChange}>
+                  {NEPALI_MONTHS.map((m, i) => (
+                    <option key={m} value={m}>{m} (Month {i + 1})</option>
+                  ))}
+                </select>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px' }}>The month your business year begins.</p>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Fiscal Year End Month</label>
+                <select className="input-field" name="fiscalYearEndMonth" value={formData.fiscalYearEndMonth} onChange={handleInputChange}>
+                  {NEPALI_MONTHS.map((m, i) => (
+                    <option key={m} value={m}>{m} (Month {i + 1})</option>
+                  ))}
+                </select>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px' }}>The month your business year closes.</p>
+              </div>
+            </div>
+
+            {/* Range Preview */}
+            {activeFiscalYear && (() => {
+              const startMonthIdx = getMonthIndex(formData.fiscalYearStartMonth || 'Shrawan');
+              const endMonthIdx = startMonthIdx === 1 ? 12 : startMonthIdx - 1;
+              const startYear = parseInt(activeFiscalYear.split('-')[0], 10);
+              const endYear = startYear + 1;
+              return (
+                <div style={{
+                  background: 'var(--bg-secondary)', borderRadius: '10px',
+                  padding: '16px', marginTop: '4px',
+                  border: '1px solid var(--border)'
+                }}>
+                  <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>Fiscal Year Range Preview</label>
+                  <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: 4 }}>Active Year</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary)' }}>{activeFiscalYear}</div>
+                    </div>
+                    <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '24px' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: 4 }}>Starts</div>
+                      <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{NEPALI_MONTHS[startMonthIdx - 1]} {startYear}</div>
+                    </div>
+                    <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '24px' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: 4 }}>Ends</div>
+                      <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{NEPALI_MONTHS[endMonthIdx - 1]} {endYear}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Unit Categories */}
+          <div className={`${styles.card} glass-panel`}>
+            <h2 className="heading-2">Unit Categories</h2>
+            <p className={styles.description}>Manage the measurement units available when creating bills.</p>
+            <div className={styles.unitList}>
+              {formData.units.map(unit => (
+                <div key={unit} className={styles.unitItem}>
+                  {unit}
+                  <button type="button" onClick={() => handleRemoveUnit(unit)} className={styles.unitDelBtn}><Trash2 size={14}/></button>
+                </div>
+              ))}
+            </div>
+            <div className={styles.addUnitBox}>
+              <input type="text" className="input-field" placeholder="Add unit (e.g. Box)" value={newUnit} onChange={(e)=>setNewUnit(e.target.value)} />
+              <button type="button" className="btn-secondary" onClick={handleAddUnit}><Plus size={16}/></button>
             </div>
           </div>
 

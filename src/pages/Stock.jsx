@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { getStocks, addStock, updateStock, getSettings, deleteRecord, getBills } from '../services/db';
+import { getFiscalYearDateRange, getMonthIndex } from '../utils/fiscalYear';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import NepaliDatePicker from '../components/NepaliDatePicker';
@@ -15,7 +16,7 @@ import styles from './Stock.module.css';
 
 const Stock = () => {
   const { user } = useAuthStore();
-  const { addToast } = useAppStore();
+  const { addToast, activeFiscalYear } = useAppStore();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +65,17 @@ const Stock = () => {
       loadStockEntries(selectedStock.particularName);
     }
   }, [selectedStock]);
+
+  // When fiscal year changes, reset date filters to FY range
+  useEffect(() => {
+    if (activeFiscalYear) {
+      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
+      const startMonthIdx = getMonthIndex(startMonth);
+      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+      setFromDate(range.from);
+      setToDate(range.to);
+    }
+  }, [activeFiscalYear, settings]);
 
   const loadStocks = async () => {
     setLoading(true);

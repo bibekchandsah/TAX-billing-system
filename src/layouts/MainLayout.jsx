@@ -3,6 +3,7 @@ import { Outlet, Navigate, NavLink, useNavigate, useLocation } from 'react-route
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { get } from 'idb-keyval';
+import { detectCurrentFiscalYear, getAvailableFiscalYears, getTodayBSDateString, getFiscalYearLabel } from '../utils/fiscalYear';
 import { generateExcelBackup } from '../services/backup';
 import { 
   LayoutDashboard, 
@@ -30,7 +31,7 @@ import { getSettings } from '../services/db';
 
 const MainLayout = () => {
   const { user, profile, logout, updateProfilePhoto, updateProfileName } = useAuthStore();
-  const { theme, toggleTheme, sidebarOpen, toggleSidebar } = useAppStore();
+  const { theme, toggleTheme, sidebarOpen, toggleSidebar, activeFiscalYear, setActiveFiscalYear } = useAppStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -40,6 +41,9 @@ const MainLayout = () => {
   
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
+
+  const [isFYDropdownOpen, setIsFYDropdownOpen] = useState(false);
+  const fyDropdownRef = useRef(null);
   
   const profileRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -106,9 +110,23 @@ const MainLayout = () => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
       }
+      if (fyDropdownRef.current && !fyDropdownRef.current.contains(event.target)) {
+        setIsFYDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Auto-detect and set fiscal year on first load
+  useEffect(() => {
+    if (!activeFiscalYear) {
+      try {
+        const todayStr = getTodayBSDateString();
+        const detectedFY = detectCurrentFiscalYear(todayStr, 'Shrawan');
+        if (detectedFY) setActiveFiscalYear(detectedFY);
+      } catch (_) {}
+    }
   }, []);
 
   useEffect(() => {
@@ -287,6 +305,37 @@ const MainLayout = () => {
           </div>
           
           <div className={styles.topbarRight}>
+            {/* Fiscal Year Selector */}
+            <div className={styles.fySelector} ref={fyDropdownRef}>
+              <button
+                className={styles.fyBtn}
+                onClick={() => setIsFYDropdownOpen(prev => !prev)}
+                title="Switch Fiscal Year"
+              >
+                <span>FY {activeFiscalYear || '—'}</span>
+                <ChevronDown size={14} style={{ transform: isFYDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+              {isFYDropdownOpen && (
+                <div className={styles.fyDropdown}>
+                  <div className={styles.fyDropdownHeader}>SELECT FISCAL YEAR</div>
+                  <div className={styles.fyDropdownList}>
+                    {activeFiscalYear && getAvailableFiscalYears(
+                      parseInt(activeFiscalYear.split('-')[0], 10)
+                    ).map(fy => (
+                      <button
+                        key={fy}
+                        className={`${styles.fyDropdownItem} ${fy === activeFiscalYear ? styles.fyDropdownItemActive : ''}`}
+                        onClick={() => { setActiveFiscalYear(fy); setIsFYDropdownOpen(false); }}
+                      >
+                        {fy === activeFiscalYear && <span className={styles.fyCheckmark}>✓</span>}
+                        FY {fy}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button className={styles.themeBtn} onClick={toggleTheme} title={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}>
               {theme === 'light' && <Sun size={20} />}
               {theme === 'dark' && <Moon size={20} />}

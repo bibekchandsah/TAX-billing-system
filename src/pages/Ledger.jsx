@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { getCustomers, addCustomer, updateCustomer, getSettings, deleteRecord, getBills } from '../services/db';
+import { getFiscalYearDateRange, getMonthIndex } from '../utils/fiscalYear';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import NepaliDatePicker from '../components/NepaliDatePicker';
@@ -15,7 +16,7 @@ import styles from './Ledger.module.css';
 
 const Ledger = () => {
   const { user } = useAuthStore();
-  const { addToast } = useAppStore();
+  const { addToast, activeFiscalYear } = useAppStore();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,17 @@ const Ledger = () => {
       loadLedgerEntries(selectedCustomer.panVatNo);
     }
   }, [selectedCustomer]);
+
+  // When fiscal year changes, reset date filters to FY range
+  useEffect(() => {
+    if (activeFiscalYear) {
+      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
+      const startMonthIdx = getMonthIndex(startMonth);
+      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+      setFromDate(range.from);
+      setToDate(range.to);
+    }
+  }, [activeFiscalYear, settings]);
 
   const loadCustomers = async () => {
     setLoading(true);

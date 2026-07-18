@@ -57,6 +57,17 @@ export const useAppStore = create((set) => ({
   removeToast: (id) => set((state) => ({
     toasts: state.toasts.filter(t => t.id !== id)
   })),
+
+  // Fiscal Year
+  activeFiscalYear: localStorage.getItem('activeFiscalYear') || null,
+  setActiveFiscalYear: (fy) => {
+    if (fy) {
+      localStorage.setItem('activeFiscalYear', fy);
+    } else {
+      localStorage.removeItem('activeFiscalYear');
+    }
+    set({ activeFiscalYear: fy });
+  },
 }));
 
 if (typeof window !== 'undefined') {

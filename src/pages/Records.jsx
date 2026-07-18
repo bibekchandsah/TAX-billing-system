@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useAppStore } from '../store/appStore';
 import { getBills, deleteRecord, getSettings } from '../services/db';
+import { getFiscalYearDateRange, getMonthIndex } from '../utils/fiscalYear';
 import { Search, Filter, Eye, Edit, Download, Trash2, X } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -11,6 +13,7 @@ import styles from './Records.module.css';
 
 const Records = () => {
   const { user, profile } = useAuthStore();
+  const { activeFiscalYear, addToast } = useAppStore();
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,6 +38,22 @@ const Records = () => {
       loadBills();
     }
   }, [user]);
+
+  // When fiscal year changes, reset date filters to FY range
+  useEffect(() => {
+    if (activeFiscalYear && settings) {
+      const startMonth = settings.fiscalYearStartMonth || 'Shrawan';
+      const startMonthIdx = getMonthIndex(startMonth);
+      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+      setFromDate(range.from);
+      setToDate(range.to);
+    } else if (activeFiscalYear) {
+      // Use default Shrawan if settings not loaded yet
+      const range = getFiscalYearDateRange(activeFiscalYear, 4);
+      setFromDate(range.from);
+      setToDate(range.to);
+    }
+  }, [activeFiscalYear, settings]);
 
   const loadBills = async () => {
     setLoading(true);
@@ -273,6 +292,17 @@ const Records = () => {
             )}
           </div>
           <div className={styles.filters}>
+            {activeFiscalYear && (
+              <span style={{
+                fontSize: '0.78rem', fontWeight: 700,
+                padding: '4px 10px', borderRadius: '20px',
+                background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
+                color: 'var(--primary)', border: '1px solid var(--primary)',
+                whiteSpace: 'nowrap'
+              }}>
+                FY {activeFiscalYear}
+              </span>
+            )}
             <div className={styles.dateWrapper}>
               <NepaliDatePicker value={fromDate} onChange={setFromDate} placeholder="From Date" />
             </div>
