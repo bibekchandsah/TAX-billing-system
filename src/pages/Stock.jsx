@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuthStore } from '../store/authStore';
+import { useAppStore } from '../store/appStore';
 import { getStocks, addStock, updateStock, getSettings, deleteRecord, getBills } from '../services/db';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -14,6 +15,7 @@ import styles from './Stock.module.css';
 
 const Stock = () => {
   const { user } = useAuthStore();
+  const { addToast } = useAppStore();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -252,8 +254,23 @@ const Stock = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Number(formData.initialStockQuantity) > 0 && !formData.date) {
-      alert("Date is required when Initial Stock Quantity is entered.");
+      addToast("Date is required when Initial Stock Quantity is entered.", "error");
       return;
+    }
+
+    const pid = formData.particularId.padStart(5, '0');
+    if (isEditingStock) {
+      const exists = stocks.find(s => s.particularId === pid && s.id !== stockToEdit.id);
+      if (exists) {
+        addToast(`Particular ID already exists for "${exists.particularName}".`, "error");
+        return;
+      }
+    } else {
+      const exists = stocks.find(s => s.particularId === pid);
+      if (exists) {
+        addToast(`Particular ID already exists for "${exists.particularName}".`, "error");
+        return;
+      }
     }
     try {
       const initialQty = Number(formData.initialStockQuantity) || 0;
