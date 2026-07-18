@@ -86,34 +86,55 @@ const MainLayout = () => {
     if (!profile) return;
     const frequency = profile.backupReminderFrequency;
     if (!frequency || frequency === 'never') return;
+    
+    const time = profile.backupReminderTime || '17:00';
+    const [hours, minutes] = time.split(':').map(Number);
 
     const checkBackupReminder = async () => {
       try {
         const lastBackup = await get('lastBackupTime');
-        const now = Date.now();
+        const now = new Date();
+        
+        const thresholdDays = frequency === 'daily' ? 1 : frequency === 'weekly' ? 7 : 30;
+        const thresholdMs = thresholdDays * 24 * 60 * 60 * 1000;
+        const timeSinceBackup = lastBackup ? now.getTime() - lastBackup : Infinity;
+
         let shouldRemind = false;
         
         if (!lastBackup) {
           shouldRemind = true;
-        } else {
-          const daysDiff = (now - lastBackup) / (1000 * 60 * 60 * 24);
-          if (frequency === 'daily' && daysDiff >= 1) shouldRemind = true;
-          else if (frequency === 'weekly' && daysDiff >= 7) shouldRemind = true;
-          else if (frequency === 'monthly' && daysDiff >= 30) shouldRemind = true;
+        } else if (timeSinceBackup >= thresholdMs) {
+          const reminderTimeToday = new Date();
+          reminderTimeToday.setHours(hours, minutes, 0, 0);
+          
+          if (now >= reminderTimeToday) {
+            // It's past the reminder time today
+            shouldRemind = true;
+          } else if (timeSinceBackup >= thresholdMs + (24 * 60 * 60 * 1000)) {
+            // Over a full day overdue, remind anyway
+            shouldRemind = true;
+          }
         }
 
-        const hasRemindedThisSession = sessionStorage.getItem('backupReminded');
+        const lastRemindedStr = sessionStorage.getItem('backupRemindedAt');
+        const lastRemindedTime = lastRemindedStr ? Number(lastRemindedStr) : 0;
         
-        if (shouldRemind && !hasRemindedThisSession) {
+        // Only remind once every 12 hours max per session to avoid spam
+        if (shouldRemind && (now.getTime() - lastRemindedTime > 12 * 60 * 60 * 1000)) {
           useAppStore.getState().addToast('Backup Reminder: It is time to back up your data. Please go to Settings > Data Backup.', 'info', false);
-          sessionStorage.setItem('backupReminded', 'true');
+          sessionStorage.setItem('backupRemindedAt', now.getTime().toString());
         }
       } catch (e) {
         console.error("Failed to check backup reminder", e);
       }
     };
     
+    // Check immediately on load
     checkBackupReminder();
+    
+    // Check every minute if the app stays open
+    const intervalId = setInterval(checkBackupReminder, 60000);
+    return () => clearInterval(intervalId);
   }, [profile]);
 
   if (!user) {

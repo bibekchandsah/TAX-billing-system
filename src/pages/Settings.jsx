@@ -30,7 +30,8 @@ const Settings = () => {
     units: ['Pcs', 'Kg', 'Ltr', 'Mtr'],
     fiscalYearStartMonth: 'Shrawan',
     fiscalYearEndMonth: 'Ashadh',
-    backupReminderFrequency: 'never'
+    backupReminderFrequency: 'never',
+    backupReminderTime: '17:00'
   });
 
   const [newUnit, setNewUnit] = useState('');
@@ -408,12 +409,25 @@ const Settings = () => {
 
             <div className="form-group" style={{marginTop: '1rem'}}>
               <label className="form-label">Automatic Backup Reminder</label>
-              <select className="input-field" name="backupReminderFrequency" value={formData.backupReminderFrequency} onChange={handleInputChange}>
-                <option value="never">Never</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
+              <div style={{display: 'flex', gap: '0.75rem'}}>
+                <select className="input-field" name="backupReminderFrequency" value={formData.backupReminderFrequency} onChange={handleInputChange} style={{flex: 1}}>
+                  <option value="never">Never</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+                {formData.backupReminderFrequency !== 'never' && (
+                  <input 
+                    type="time" 
+                    className="input-field" 
+                    name="backupReminderTime" 
+                    value={formData.backupReminderTime} 
+                    onChange={handleInputChange} 
+                    style={{width: '120px'}}
+                    required
+                  />
+                )}
+              </div>
               <p style={{fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.3rem'}}>
                 You will receive a notification to back up your data based on this frequency.
               </p>
