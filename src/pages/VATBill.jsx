@@ -409,6 +409,11 @@ const VATBill = () => {
               name="pan"
               value={customer.pan}
               onChange={handleCustomerChange}
+              onBlur={() => {
+                if (customer.pan && customer.pan.length < 9) {
+                  addToast("PAN/VAT No. must be exactly 9 digits.", "error");
+                }
+              }}
               placeholder="9 digits"
               autoFocus
             />
@@ -588,7 +593,7 @@ const VATBill = () => {
         <button 
           className="btn-primary" 
           onClick={handleSave}
-          disabled={loading || items.length === 0}
+          disabled={loading || items.length === 0 || customer.pan.length !== 9}
         >
           <Save size={18} /> {loading ? 'Saving...' : 'Save Bill'}
         </button>
