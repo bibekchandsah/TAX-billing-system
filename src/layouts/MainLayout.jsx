@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Outlet, Navigate, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
+import { get } from 'idb-keyval';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -80,6 +81,40 @@ const MainLayout = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!profile) return;
+    const frequency = profile.backupReminderFrequency;
+    if (!frequency || frequency === 'never') return;
+
+    const checkBackupReminder = async () => {
+      try {
+        const lastBackup = await get('lastBackupTime');
+        const now = Date.now();
+        let shouldRemind = false;
+        
+        if (!lastBackup) {
+          shouldRemind = true;
+        } else {
+          const daysDiff = (now - lastBackup) / (1000 * 60 * 60 * 24);
+          if (frequency === 'daily' && daysDiff >= 1) shouldRemind = true;
+          else if (frequency === 'weekly' && daysDiff >= 7) shouldRemind = true;
+          else if (frequency === 'monthly' && daysDiff >= 30) shouldRemind = true;
+        }
+
+        const hasRemindedThisSession = sessionStorage.getItem('backupReminded');
+        
+        if (shouldRemind && !hasRemindedThisSession) {
+          useAppStore.getState().addToast('Backup Reminder: It is time to back up your data. Please go to Settings > Data Backup.', 'info', false);
+          sessionStorage.setItem('backupReminded', 'true');
+        }
+      } catch (e) {
+        console.error("Failed to check backup reminder", e);
+      }
+    };
+    
+    checkBackupReminder();
+  }, [profile]);
 
   if (!user) {
     return <Navigate to="/login" replace />;

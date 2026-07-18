@@ -100,8 +100,34 @@ export const generateExcelBackup = async (userId) => {
     const dateStr = new Date().toISOString().split('T')[0];
     const fileName = `VAT_Billing_Backup_${dateStr}.xlsx`;
 
-    // Trigger download
-    XLSX.writeFile(wb, fileName);
+    // Trigger download or save to folder
+    const { get, set } = await import('idb-keyval');
+    let savedToFolder = false;
+    
+    try {
+      const dirHandle = await get('backupDirectoryHandle');
+      if (dirHandle) {
+        // Request permissions if needed
+        const permission = await dirHandle.queryPermission({ mode: 'readwrite' });
+        if (permission === 'granted' || (await dirHandle.requestPermission({ mode: 'readwrite' })) === 'granted') {
+          const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          await writable.write(buffer);
+          await writable.close();
+          savedToFolder = true;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not save to selected folder, falling back to download", e);
+    }
+
+    if (!savedToFolder) {
+      XLSX.writeFile(wb, fileName);
+    }
+    
+    // Record last backup time
+    await set('lastBackupTime', Date.now());
     
     return true;
   } catch (error) {

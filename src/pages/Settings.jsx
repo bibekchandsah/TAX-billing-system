@@ -3,11 +3,12 @@ import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { getSettings, updateSettings } from '../services/db';
 import { generateExcelBackup } from '../services/backup';
-import { Save, LogOut, Shield, Download, Lock, Calendar, Plus, Trash2, Edit2, Smartphone, CheckCircle, Eye, EyeOff, Key, Monitor, Clock, X } from 'lucide-react';
+import { Save, LogOut, Shield, Download, Lock, Calendar, Plus, Trash2, Edit2, Smartphone, CheckCircle, Eye, EyeOff, Key, Monitor, Clock, X, FolderOpen } from 'lucide-react';
 import ActionPinModal from '../components/ActionPinModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import { db } from '../firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
+import { get, set } from 'idb-keyval';
 import styles from './Settings.module.css';
 
 const Settings = () => {
@@ -28,10 +29,12 @@ const Settings = () => {
     actionPin: '',
     units: ['Pcs', 'Kg', 'Ltr', 'Mtr'],
     fiscalYearStartMonth: 'Shrawan',
-    fiscalYearEndMonth: 'Ashadh'
+    fiscalYearEndMonth: 'Ashadh',
+    backupReminderFrequency: 'never'
   });
 
   const [newUnit, setNewUnit] = useState('');
+  const [backupFolder, setBackupFolder] = useState('');
 
   const [originalPin, setOriginalPin] = useState('');
   const [isPinUnlocked, setIsPinUnlocked] = useState(false);
@@ -42,6 +45,15 @@ const Settings = () => {
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
+
+  useEffect(() => {
+    // Load local backup folder name from IndexedDB
+    get('backupDirectoryHandle').then(handle => {
+      if (handle && handle.name) {
+        setBackupFolder(handle.name);
+      }
+    }).catch(console.error);
+  }, []);
 
   useEffect(() => {
     // Check if already installed
@@ -192,6 +204,23 @@ const Settings = () => {
       addToast('Device session revoked.', 'success');
     } catch (err) {
       addToast('Failed to revoke session.', 'error');
+    }
+  };
+
+  const handleSelectFolder = async () => {
+    if (!window.showDirectoryPicker) {
+      addToast('Folder selection is not supported in this browser.', 'error');
+      return;
+    }
+    try {
+      const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      await set('backupDirectoryHandle', handle);
+      setBackupFolder(handle.name);
+      addToast('Backup destination folder set successfully.', 'success');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        addToast('Failed to select folder.', 'error');
+      }
     }
   };
 
@@ -356,10 +385,42 @@ const Settings = () => {
               <Download size={24} className={styles.iconPrimary} />
               <h2 className="heading-2" style={{marginBottom: 0}}>Data Backup</h2>
             </div>
-            <p className={styles.description}>Export all your records, stock, and customer data to an Excel file (.xlsx).</p>
+            <p className={styles.description}>Export all your records, stock, and customer data to an Excel file (.xlsx) or configure automatic backups.</p>
             
-            <button type="button" className="btn-secondary" onClick={handleExport} disabled={exporting} style={{width: '100%', justifyContent: 'center', marginTop: '1rem'}}>
-              <Download size={18} /> {exporting ? 'Exporting...' : 'Export to Excel'}
+            <div className="form-group" style={{marginTop: '1rem'}}>
+              <label className="form-label" style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}>
+                <FolderOpen size={16} /> Backup Destination Folder
+              </label>
+              <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+                <div style={{
+                  flex: 1, padding: '0.6rem 0.8rem', background: 'var(--bg-secondary)', 
+                  border: '1px solid var(--border-color)', borderRadius: '0.4rem', 
+                  fontSize: '0.85rem', color: backupFolder ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                }}>
+                  {backupFolder ? `Selected: ${backupFolder}` : 'Choose where backups will be saved'}
+                </div>
+                <button type="button" className="btn-secondary" onClick={handleSelectFolder} style={{whiteSpace: 'nowrap'}}>
+                  Choose Folder
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group" style={{marginTop: '1rem'}}>
+              <label className="form-label">Automatic Backup Reminder</label>
+              <select className="input-field" name="backupReminderFrequency" value={formData.backupReminderFrequency} onChange={handleInputChange}>
+                <option value="never">Never</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+              <p style={{fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.3rem'}}>
+                You will receive a notification to back up your data based on this frequency.
+              </p>
+            </div>
+
+            <button type="button" className="btn-primary" onClick={handleExport} disabled={exporting} style={{width: '100%', justifyContent: 'center', marginTop: '1.5rem'}}>
+              <Download size={18} /> {exporting ? 'Exporting...' : 'Export Now (Manual Backup)'}
             </button>
           </div>
 

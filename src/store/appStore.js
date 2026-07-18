@@ -39,17 +39,20 @@ export const useAppStore = create((set) => ({
   setSidebarOpen: (isOpen) => set({ sidebarOpen: isOpen }),
 
   toasts: [],
-  addToast: (message, type = 'info') => {
+  addToast: (message, type = 'info', autoDismiss = true) => {
     const id = Date.now();
     set((state) => ({
       toasts: [...state.toasts, { id, message, type }]
     }));
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-      set((state) => ({
-        toasts: state.toasts.filter(t => t.id !== id)
-      }));
-    }, 3000);
+    
+    if (autoDismiss) {
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        set((state) => ({
+          toasts: state.toasts.filter(t => t.id !== id)
+        }));
+      }, 3000);
+    }
   },
   removeToast: (id) => set((state) => ({
     toasts: state.toasts.filter(t => t.id !== id)
