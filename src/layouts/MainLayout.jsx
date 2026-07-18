@@ -3,7 +3,7 @@ import { Outlet, Navigate, NavLink, useNavigate, useLocation } from 'react-route
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { get } from 'idb-keyval';
-import { detectCurrentFiscalYear, getAvailableFiscalYears, getTodayBSDateString, getFiscalYearLabel, getFYMonthsWithYear, getMonthIndex } from '../utils/fiscalYear';
+import { detectCurrentFiscalYear, getAvailableFiscalYears, getTodayBSDateString, getFiscalYearLabel, getFYMonthsWithYear, getMonthIndex, NEPALI_MONTHS } from '../utils/fiscalYear';
 import { generateExcelBackup } from '../services/backup';
 import { 
   LayoutDashboard, 
@@ -364,54 +364,81 @@ const MainLayout = () => {
             </div>
 
             {/* Month Selector */}
-            {activeFiscalYear && (
-              <div className={styles.fySelectorContainer} ref={monthDropdownRef}>
-                <div className={styles.fySelector}>
-                  <button
-                    className={styles.fyBtn}
-                    onClick={() => setIsMonthDropdownOpen(prev => !prev)}
-                    title="Filter by Month"
-                    style={{ borderLeft: 'none', borderRight: 'none', paddingLeft: 12, paddingRight: 12 }}
-                  >
-                    <span>
-                      {activeMonth
-                        ? (() => {
-                            const months = getFYMonthsWithYear(activeFiscalYear, 4);
-                            const found = months.find(m => m.key === activeMonth);
-                            return found ? found.label : 'All Months';
-                          })()
-                        : 'All Months'
-                      }
-                    </span>
-                    <ChevronDown size={14} style={{ transform: isMonthDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                  </button>
-                </div>
-                {isMonthDropdownOpen && (
-                  <div className={styles.fyDropdown}>
-                    <div className={styles.fyDropdownHeader}>SELECT MONTH</div>
-                    <div className={styles.fyDropdownList}>
-                      <button
-                        className={`${styles.fyDropdownItem} ${!activeMonth ? styles.fyDropdownItemActive : ''}`}
-                        onClick={() => { setActiveMonth(null); setIsMonthDropdownOpen(false); }}
-                      >
-                        {!activeMonth && <span className={styles.fyCheckmark}>✓</span>}
-                        All Months
-                      </button>
-                      {getFYMonthsWithYear(activeFiscalYear, 4).map(m => (
-                        <button
-                          key={m.key}
-                          className={`${styles.fyDropdownItem} ${activeMonth === m.key ? styles.fyDropdownItemActive : ''}`}
-                          onClick={() => { setActiveMonth(m.key); setIsMonthDropdownOpen(false); }}
-                        >
-                          {activeMonth === m.key && <span className={styles.fyCheckmark}>✓</span>}
-                          {m.label}
-                        </button>
-                      ))}
-                    </div>
+            {activeFiscalYear && (() => {
+              // Resolve current BS month label once for reuse
+              const todayStr = getTodayBSDateString();
+              const [todayYr, todayMo] = todayStr.split('-').map(Number);
+              const pad = (n) => String(n).padStart(2, '0');
+              const currentMonthKey = `${todayYr}-${pad(todayMo)}`;
+              const currentMonthLabel = (() => {
+                const months = getFYMonthsWithYear(activeFiscalYear, 4);
+                const found = months.find(m => m.key === currentMonthKey);
+                return found ? found.label : `${NEPALI_MONTHS[todayMo - 1]} ${todayYr}`;
+              })();
+
+              const buttonLabel = (() => {
+                if (!activeMonth) return 'All Months';
+                if (activeMonth === 'current') return `${currentMonthLabel} ★`;
+                const months = getFYMonthsWithYear(activeFiscalYear, 4);
+                const found = months.find(m => m.key === activeMonth);
+                return found ? found.label : 'All Months';
+              })();
+
+              return (
+                <div className={styles.fySelectorContainer} ref={monthDropdownRef}>
+                  <div className={styles.fySelector}>
+                    <button
+                      className={styles.fyBtn}
+                      onClick={() => setIsMonthDropdownOpen(prev => !prev)}
+                      title="Filter by Month"
+                      style={{ borderLeft: 'none', borderRight: 'none', paddingLeft: 12, paddingRight: 12 }}
+                    >
+                      <span>{buttonLabel}</span>
+                      <ChevronDown size={14} style={{ transform: isMonthDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                    </button>
                   </div>
-                )}
-              </div>
-            )}
+                  {isMonthDropdownOpen && (
+                    <div className={styles.fyDropdown}>
+                      <div className={styles.fyDropdownHeader}>SELECT MONTH</div>
+                      <div className={styles.fyDropdownList}>
+                        {/* All Months */}
+                        <button
+                          className={`${styles.fyDropdownItem} ${!activeMonth ? styles.fyDropdownItemActive : ''}`}
+                          onClick={() => { setActiveMonth(null); setIsMonthDropdownOpen(false); }}
+                        >
+                          {!activeMonth && <span className={styles.fyCheckmark}>✓</span>}
+                          All Months
+                        </button>
+                        {/* Current Month shortcut */}
+                        <button
+                          className={`${styles.fyDropdownItem} ${activeMonth === 'current' ? styles.fyDropdownItemActive : ''}`}
+                          onClick={() => { setActiveMonth('current'); setIsMonthDropdownOpen(false); }}
+                          style={{ fontStyle: 'italic' }}
+                        >
+                          {activeMonth === 'current' && <span className={styles.fyCheckmark}>✓</span>}
+                          Current Month
+                          <span style={{ fontSize: '0.72rem', marginLeft: 6, opacity: 0.7 }}>({currentMonthLabel})</span>
+                        </button>
+                        {/* Divider */}
+                        <div style={{ height: 1, background: 'var(--border-color)', margin: '4px 0' }} />
+                        {/* All months of FY */}
+                        {getFYMonthsWithYear(activeFiscalYear, 4).map(m => (
+                          <button
+                            key={m.key}
+                            className={`${styles.fyDropdownItem} ${activeMonth === m.key ? styles.fyDropdownItemActive : ''}`}
+                            onClick={() => { setActiveMonth(m.key); setIsMonthDropdownOpen(false); }}
+                          >
+                            {activeMonth === m.key && <span className={styles.fyCheckmark}>✓</span>}
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
 
             <button className={styles.themeBtn} onClick={toggleTheme} title={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}>
               {theme === 'light' && <Sun size={20} />}

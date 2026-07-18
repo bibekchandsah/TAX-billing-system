@@ -253,8 +253,14 @@ const Records = () => {
     let effToDate = toDate;
     
     if (!fromDate && !toDate && activeFiscalYear) {
-      if (activeMonth) {
-        // Month selected: narrow to that specific month
+      if (activeMonth === 'current') {
+        // Resolve today's BS month dynamically
+        const todayStr = getTodayBSDateString();
+        const [yr, mo] = todayStr.split('-');
+        const pad = (n) => String(n).padStart(2, '0');
+        effFromDate = `${yr}-${pad(Number(mo))}-01`;
+        effToDate   = `${yr}-${pad(Number(mo))}-32`;
+      } else if (activeMonth) {
         const [yr, mo] = activeMonth.split('-');
         const pad = (n) => String(n).padStart(2, '0');
         effFromDate = `${yr}-${mo}-01`;

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { getStocks, addStock, updateStock, getSettings, deleteRecord, getBills } from '../services/db';
-import { getFiscalYearDateRange, getMonthIndex } from '../utils/fiscalYear';
+import { getFiscalYearDateRange, getMonthIndex, getTodayBSDateString } from '../utils/fiscalYear';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import NepaliDatePicker from '../components/NepaliDatePicker';
@@ -334,7 +334,13 @@ const Stock = () => {
     let effToDate = toDate;
     
     if (!fromDate && !toDate && activeFiscalYear) {
-      if (activeMonth) {
+      if (activeMonth === 'current') {
+        const todayStr = getTodayBSDateString();
+        const [yr, mo] = todayStr.split('-');
+        const pad = (n) => String(n).padStart(2, '0');
+        effFromDate = `${yr}-${pad(Number(mo))}-01`;
+        effToDate   = `${yr}-${pad(Number(mo))}-32`;
+      } else if (activeMonth) {
         const [yr, mo] = activeMonth.split('-');
         effFromDate = `${yr}-${mo}-01`;
         effToDate   = `${yr}-${mo}-32`;
@@ -409,7 +415,13 @@ const Stock = () => {
     let effToDate = toDate;
     
     if (!fromDate && !toDate && activeFiscalYear) {
-      if (activeMonth) {
+      if (activeMonth === 'current') {
+        const todayStr = getTodayBSDateString();
+        const [yr, mo] = todayStr.split('-');
+        const pad = (n) => String(n).padStart(2, '0');
+        effFromDate = `${yr}-${pad(Number(mo))}-01`;
+        effToDate   = `${yr}-${pad(Number(mo))}-32`;
+      } else if (activeMonth) {
         const [yr, mo] = activeMonth.split('-');
         effFromDate = `${yr}-${mo}-01`;
         effToDate   = `${yr}-${mo}-32`;
