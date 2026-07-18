@@ -34,6 +34,7 @@ const MainLayout = () => {
   const [isUploading, setIsUploading] = useState(false);
   const profileRef = useRef(null);
   const fileInputRef = useRef(null);
+  const backupRemindedRef = useRef(false);
 
   const handlePhotoUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -103,26 +104,23 @@ const MainLayout = () => {
         
         if (!lastBackup) {
           shouldRemind = true;
-        } else if (timeSinceBackup >= thresholdMs) {
-          const reminderTimeToday = new Date();
-          reminderTimeToday.setHours(hours, minutes, 0, 0);
+        } else {
+          const nextReminder = new Date(lastBackup);
+          if (frequency === 'daily') nextReminder.setDate(nextReminder.getDate() + 1);
+          else if (frequency === 'weekly') nextReminder.setDate(nextReminder.getDate() + 7);
+          else if (frequency === 'monthly') nextReminder.setMonth(nextReminder.getMonth() + 1);
           
-          if (now >= reminderTimeToday) {
-            // It's past the reminder time today
-            shouldRemind = true;
-          } else if (timeSinceBackup >= thresholdMs + (24 * 60 * 60 * 1000)) {
-            // Over a full day overdue, remind anyway
+          nextReminder.setHours(hours, minutes, 0, 0);
+          
+          if (now >= nextReminder) {
             shouldRemind = true;
           }
         }
-
-        const lastRemindedStr = sessionStorage.getItem('backupRemindedAt');
-        const lastRemindedTime = lastRemindedStr ? Number(lastRemindedStr) : 0;
         
-        // Only remind once every 12 hours max per session to avoid spam
-        if (shouldRemind && (now.getTime() - lastRemindedTime > 12 * 60 * 60 * 1000)) {
+        // Remind once per page load to ensure they see it, but don't spam intervals
+        if (shouldRemind && !backupRemindedRef.current) {
           useAppStore.getState().addToast('Backup Reminder: It is time to back up your data. Please go to Settings > Data Backup.', 'info', false);
-          sessionStorage.setItem('backupRemindedAt', now.getTime().toString());
+          backupRemindedRef.current = true;
         }
       } catch (e) {
         console.error("Failed to check backup reminder", e);
