@@ -66,8 +66,14 @@ export const useAppStore = create((set) => ({
     } else {
       localStorage.removeItem('activeFiscalYear');
     }
-    set({ activeFiscalYear: fy });
+    // Reset month filter when FY changes
+    set({ activeFiscalYear: fy, activeMonth: null });
   },
+
+  // Month filter (null = all months of the active FY)
+  // value is the month key string like "2082-04" or null
+  activeMonth: null,
+  setActiveMonth: (monthKey) => set({ activeMonth: monthKey }),
 }));
 
 if (typeof window !== 'undefined') {

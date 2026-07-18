@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Fiscal Year utilities for Nepal Bikram Sambat (BS) calendar.
  * Nepal's standard fiscal year: Shrawan (Month 4) to Ashadh (Month 3) of next BS year.
  *
@@ -78,6 +78,39 @@ export const detectCurrentFiscalYear = (todayBSDateStr, startMonthName = 'Shrawa
   const startMonthIndex = getMonthIndex(startMonthName);
   const fyStartYear = getCurrentFYStartYear(year, month, startMonthIndex);
   return getFiscalYearLabel(fyStartYear);
+};
+
+/**
+ * Returns an ordered array of months in the given fiscal year.
+ * Each entry: { key: "2082-04", label: "Shrawan 2082", monthIndex: 4, year: 2082, from: "2082-04-01", to: "2082-04-32" }
+ *
+ * Fiscal year starts at startMonthIndex (e.g. 4 = Shrawan) of startYear,
+ * and ends at (startMonthIndex - 1) of startYear + 1.
+ */
+export const getFYMonthsWithYear = (fyLabel, startMonthIndex = 4) => {
+  const startYear = parseInt(fyLabel.split('-')[0], 10);
+  const pad = (n) => String(n).padStart(2, '0');
+  const months = [];
+
+  for (let i = 0; i < 12; i++) {
+    let monthIndex = startMonthIndex + i;
+    let year = startYear;
+    if (monthIndex > 12) {
+      monthIndex -= 12;
+      year = startYear + 1;
+    }
+    const monthName = NEPALI_MONTHS[monthIndex - 1];
+    months.push({
+      key: `${year}-${pad(monthIndex)}`,
+      label: `${monthName} ${year}`,
+      monthName,
+      monthIndex,
+      year,
+      from: `${year}-${pad(monthIndex)}-01`,
+      to:   `${year}-${pad(monthIndex)}-32`,
+    });
+  }
+  return months;
 };
 
 /**

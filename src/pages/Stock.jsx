@@ -16,7 +16,7 @@ import styles from './Stock.module.css';
 
 const Stock = () => {
   const { user } = useAuthStore();
-  const { addToast, activeFiscalYear } = useAppStore();
+  const { addToast, activeFiscalYear, activeMonth } = useAppStore();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -334,11 +334,17 @@ const Stock = () => {
     let effToDate = toDate;
     
     if (!fromDate && !toDate && activeFiscalYear) {
-      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
-      const startMonthIdx = getMonthIndex(startMonth);
-      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
-      effFromDate = range.from;
-      effToDate = range.to;
+      if (activeMonth) {
+        const [yr, mo] = activeMonth.split('-');
+        effFromDate = `${yr}-${mo}-01`;
+        effToDate   = `${yr}-${mo}-32`;
+      } else {
+        const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
+        const startMonthIdx = getMonthIndex(startMonth);
+        const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+        effFromDate = range.from;
+        effToDate = range.to;
+      }
     }
 
     if (effFromDate && entry.date < effFromDate) return false;
@@ -403,11 +409,17 @@ const Stock = () => {
     let effToDate = toDate;
     
     if (!fromDate && !toDate && activeFiscalYear) {
-      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
-      const startMonthIdx = getMonthIndex(startMonth);
-      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
-      effFromDate = range.from;
-      effToDate = range.to;
+      if (activeMonth) {
+        const [yr, mo] = activeMonth.split('-');
+        effFromDate = `${yr}-${mo}-01`;
+        effToDate   = `${yr}-${mo}-32`;
+      } else {
+        const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
+        const startMonthIdx = getMonthIndex(startMonth);
+        const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+        effFromDate = range.from;
+        effToDate = range.to;
+      }
     }
 
     if (selectedStock.initialStockQuantity > 0 && (!effFromDate || selectedStock.date >= effFromDate) && (!effToDate || selectedStock.date <= effToDate)) {

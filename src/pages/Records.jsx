@@ -13,7 +13,7 @@ import styles from './Records.module.css';
 
 const Records = () => {
   const { user, profile } = useAuthStore();
-  const { activeFiscalYear, addToast } = useAppStore();
+  const { activeFiscalYear, activeMonth, addToast } = useAppStore();
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -253,11 +253,20 @@ const Records = () => {
     let effToDate = toDate;
     
     if (!fromDate && !toDate && activeFiscalYear) {
-      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
-      const startMonthIdx = getMonthIndex(startMonth);
-      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
-      effFromDate = range.from;
-      effToDate = range.to;
+      if (activeMonth) {
+        // Month selected: narrow to that specific month
+        const [yr, mo] = activeMonth.split('-');
+        const pad = (n) => String(n).padStart(2, '0');
+        effFromDate = `${yr}-${mo}-01`;
+        effToDate   = `${yr}-${mo}-32`;
+      } else {
+        // All months of FY
+        const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
+        const startMonthIdx = getMonthIndex(startMonth);
+        const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+        effFromDate = range.from;
+        effToDate = range.to;
+      }
     }
 
     const matchesFromDate = effFromDate ? bill.date >= effFromDate : true;

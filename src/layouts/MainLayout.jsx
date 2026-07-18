@@ -3,7 +3,7 @@ import { Outlet, Navigate, NavLink, useNavigate, useLocation } from 'react-route
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { get } from 'idb-keyval';
-import { detectCurrentFiscalYear, getAvailableFiscalYears, getTodayBSDateString, getFiscalYearLabel } from '../utils/fiscalYear';
+import { detectCurrentFiscalYear, getAvailableFiscalYears, getTodayBSDateString, getFiscalYearLabel, getFYMonthsWithYear, getMonthIndex } from '../utils/fiscalYear';
 import { generateExcelBackup } from '../services/backup';
 import { 
   LayoutDashboard, 
@@ -33,7 +33,7 @@ import { getSettings } from '../services/db';
 
 const MainLayout = () => {
   const { user, profile, logout, updateProfilePhoto, updateProfileName } = useAuthStore();
-  const { theme, toggleTheme, sidebarOpen, toggleSidebar, activeFiscalYear, setActiveFiscalYear } = useAppStore();
+  const { theme, toggleTheme, sidebarOpen, toggleSidebar, activeFiscalYear, setActiveFiscalYear, activeMonth, setActiveMonth } = useAppStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -46,6 +46,8 @@ const MainLayout = () => {
 
   const [isFYDropdownOpen, setIsFYDropdownOpen] = useState(false);
   const fyDropdownRef = useRef(null);
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
+  const monthDropdownRef = useRef(null);
   
   const profileRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -114,6 +116,9 @@ const MainLayout = () => {
       }
       if (fyDropdownRef.current && !fyDropdownRef.current.contains(event.target)) {
         setIsFYDropdownOpen(false);
+      }
+      if (monthDropdownRef.current && !monthDropdownRef.current.contains(event.target)) {
+        setIsMonthDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -357,6 +362,56 @@ const MainLayout = () => {
                 </div>
               )}
             </div>
+
+            {/* Month Selector */}
+            {activeFiscalYear && (
+              <div className={styles.fySelectorContainer} ref={monthDropdownRef}>
+                <div className={styles.fySelector}>
+                  <button
+                    className={styles.fyBtn}
+                    onClick={() => setIsMonthDropdownOpen(prev => !prev)}
+                    title="Filter by Month"
+                    style={{ borderLeft: 'none', borderRight: 'none', paddingLeft: 12, paddingRight: 12 }}
+                  >
+                    <span>
+                      {activeMonth
+                        ? (() => {
+                            const months = getFYMonthsWithYear(activeFiscalYear, 4);
+                            const found = months.find(m => m.key === activeMonth);
+                            return found ? found.label : 'All Months';
+                          })()
+                        : 'All Months'
+                      }
+                    </span>
+                    <ChevronDown size={14} style={{ transform: isMonthDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
+                </div>
+                {isMonthDropdownOpen && (
+                  <div className={styles.fyDropdown}>
+                    <div className={styles.fyDropdownHeader}>SELECT MONTH</div>
+                    <div className={styles.fyDropdownList}>
+                      <button
+                        className={`${styles.fyDropdownItem} ${!activeMonth ? styles.fyDropdownItemActive : ''}`}
+                        onClick={() => { setActiveMonth(null); setIsMonthDropdownOpen(false); }}
+                      >
+                        {!activeMonth && <span className={styles.fyCheckmark}>✓</span>}
+                        All Months
+                      </button>
+                      {getFYMonthsWithYear(activeFiscalYear, 4).map(m => (
+                        <button
+                          key={m.key}
+                          className={`${styles.fyDropdownItem} ${activeMonth === m.key ? styles.fyDropdownItemActive : ''}`}
+                          onClick={() => { setActiveMonth(m.key); setIsMonthDropdownOpen(false); }}
+                        >
+                          {activeMonth === m.key && <span className={styles.fyCheckmark}>✓</span>}
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <button className={styles.themeBtn} onClick={toggleTheme} title={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}>
               {theme === 'light' && <Sun size={20} />}
