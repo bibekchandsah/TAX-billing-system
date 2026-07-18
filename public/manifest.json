@@ -1,7 +1,7 @@
 {
- "name": "Invoice Billing System",
- "short_name": "Invoice Bill",
- "description": "Modern invoice billing system with Nepali date support, PDF generation, and secure database storage",
+ "name": "VAT Billing System",
+ "short_name": "VAT Bill",
+ "description": "Modern VAT billing system with Nepali date support, PDF generation, and secure database storage",
  "start_url": "/",
  "scope": "/",
  "display": "standalone",

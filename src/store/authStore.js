@@ -22,6 +22,7 @@ export const useAuthStore = create((set, get) => ({
   error: null,
   sessionId: null,
   unsubscribeSession: null,
+  heartbeatInterval: null,
 
   initAuthListener: () => {
     return onAuthStateChanged(auth, async (user) => {
@@ -57,8 +58,18 @@ export const useAuthStore = create((set, get) => ({
                 signOut(auth);
               }
             }
+          }, (err) => {
+            console.error('Session listener error:', err);
           });
           set({ unsubscribeSession: unsubscribe });
+
+          // Heartbeat: update lastActive every 5 minutes
+          const heartbeat = setInterval(async () => {
+            try {
+              await setDoc(sessionRef, { lastActive: new Date().toISOString() }, { merge: true });
+            } catch(e) {}
+          }, 5 * 60 * 1000);
+          set({ heartbeatInterval: heartbeat });
         } catch (e) {
           console.error('Failed to register session', e);
         }
@@ -73,11 +84,10 @@ export const useAuthStore = create((set, get) => ({
           console.error("Failed to fetch profile", error);
         }
       } else {
-        const { unsubscribeSession } = get();
-        if (unsubscribeSession) {
-          unsubscribeSession();
-        }
-        set({ user: null, profile: null, sessionId: null, unsubscribeSession: null });
+        const { unsubscribeSession, heartbeatInterval } = get();
+        if (unsubscribeSession) unsubscribeSession();
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        set({ user: null, profile: null, sessionId: null, unsubscribeSession: null, heartbeatInterval: null });
       }
       set({ loading: false });
     });
