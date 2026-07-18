@@ -111,6 +111,18 @@ const Stock = () => {
     }
   };
 
+  const getNextParticularId = () => {
+    if (!stocks || stocks.length === 0) return '00001';
+    let maxId = 0;
+    stocks.forEach(stock => {
+      const num = parseInt(stock.particularId, 10);
+      if (!isNaN(num) && num > maxId) {
+        maxId = num;
+      }
+    });
+    return (maxId + 1).toString().padStart(5, '0');
+  };
+
   const openEditModal = (stock) => {
     setIsEditingStock(true);
     setFormData({
@@ -478,14 +490,14 @@ const Stock = () => {
             </div>
             <button className="btn-primary" onClick={() => {
               setFormData({
-                particularName: '', particularId: '', defaultUnit: settings?.units?.[0] || 'Pcs', price: '', 
+                particularName: '', particularId: getNextParticularId(), defaultUnit: settings?.units?.[0] || 'Pcs', price: '', 
                 initialStockQuantity: '', date: '', billNumber: ''
               });
               setIsEditingStock(false);
               setStockToEdit(null);
               setShowAddModal(true);
             }}>
-              <Plus size={18} /> New
+              <Plus size={18} /> New Particular
             </button>
           </div>
 
