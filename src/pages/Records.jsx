@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { getBills, deleteRecord, getSettings } from '../services/db';
-import { getFiscalYearDateRange, getMonthIndex } from '../utils/fiscalYear';
+import { getFiscalYearDateRange, getMonthIndex, getTodayBSDateString } from '../utils/fiscalYear';
 import { Search, Filter, Eye, Edit, Download, Trash2, X } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
