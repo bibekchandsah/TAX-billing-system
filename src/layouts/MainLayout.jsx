@@ -96,23 +96,25 @@ const MainLayout = () => {
         const lastBackup = await get('lastBackupTime');
         const now = new Date();
         
-        const thresholdDays = frequency === 'daily' ? 1 : frequency === 'weekly' ? 7 : 30;
-        const thresholdMs = thresholdDays * 24 * 60 * 60 * 1000;
-        const timeSinceBackup = lastBackup ? now.getTime() - lastBackup : Infinity;
-
         let shouldRemind = false;
         
         if (!lastBackup) {
           shouldRemind = true;
         } else {
-          const nextReminder = new Date(lastBackup);
-          if (frequency === 'daily') nextReminder.setDate(nextReminder.getDate() + 1);
-          else if (frequency === 'weekly') nextReminder.setDate(nextReminder.getDate() + 7);
-          else if (frequency === 'monthly') nextReminder.setMonth(nextReminder.getMonth() + 1);
+          const reminderToday = new Date(now);
+          reminderToday.setHours(hours, minutes, 0, 0);
           
-          nextReminder.setHours(hours, minutes, 0, 0);
+          let targetDate;
+          if (now >= reminderToday) {
+            targetDate = reminderToday;
+          } else {
+            targetDate = new Date(reminderToday);
+            if (frequency === 'daily') targetDate.setDate(targetDate.getDate() - 1);
+            else if (frequency === 'weekly') targetDate.setDate(targetDate.getDate() - 7);
+            else if (frequency === 'monthly') targetDate.setMonth(targetDate.getMonth() - 1);
+          }
           
-          if (now >= nextReminder) {
+          if (lastBackup < targetDate.getTime()) {
             shouldRemind = true;
           }
         }
