@@ -33,6 +33,7 @@
   }
 }
 
+
 .leftPanel {
   display: flex;
   flex-direction: column;
@@ -379,4 +380,13 @@
   background-color: var(--accent-primary);
   color: white;
   box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 991px) {
+  .contentGridCollapsed {
+    gap: 0;
+  }
+  .leftPanelCollapsed {
+    display: none !important;
+  }
 }

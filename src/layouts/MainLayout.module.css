@@ -47,7 +47,7 @@
 }
 
 .sidebarHeader {
-  height: 70px;
+  height: 60px;
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
@@ -138,7 +138,7 @@
 }
 
 .topbar {
-  height: 70px;
+  height: 60px;
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
@@ -193,8 +193,8 @@
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: white;
@@ -649,7 +649,7 @@
   justify-content: center;
   background: transparent;
   border: none;
-  padding: 6px 8px;
+  padding: 12px 8px;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
@@ -664,7 +664,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 12px 8px;
   background: transparent;
   border: none;
   border-left: 1px solid var(--border-color);

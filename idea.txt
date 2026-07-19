@@ -219,8 +219,6 @@ Install App/ PWA
     should be installable as PWA
     should be work in chrome, edge, safari, firefox, opera
 
-
-!!!
 Device Sessions & Security
     should be able to change password
     should be able to logout from all devices
