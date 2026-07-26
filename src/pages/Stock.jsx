@@ -494,13 +494,20 @@ const Stock = () => {
   };
 
   // Calculate dynamic stats for selected stock based on filtered entries
-  const totalStockIn = filteredEntries.filter(e => e.type === 'Purchase').reduce((sum, e) => sum + e.qty, 0);
-  const totalAmountIn = filteredEntries.filter(e => e.type === 'Purchase').reduce((sum, e) => sum + e.amount, 0);
-  const totalStockOut = filteredEntries.filter(e => e.type === 'Sale').reduce((sum, e) => sum + e.qty, 0);
-  const totalAmountOut = filteredEntries.filter(e => e.type === 'Sale').reduce((sum, e) => sum + e.amount, 0);
-
   const initialStock = Number(selectedStock?.initialStockQuantity) || 0;
+  const initialStockRate = Number(selectedStock?.purchaseRate ?? selectedStock?.price ?? 0);
+  const initialStockAmt = initialStock * initialStockRate;
+
+  const purchasesIn = filteredEntries.filter(e => e.type === 'Purchase');
+  const totalStockIn = purchasesIn.reduce((sum, e) => sum + e.qty, 0);
+  const totalAmountIn = (initialStock > 0 ? initialStockAmt : 0) + purchasesIn.reduce((sum, e) => sum + e.amount, 0);
+
+  const salesOut = filteredEntries.filter(e => e.type === 'Sale');
+  const totalStockOut = salesOut.reduce((sum, e) => sum + e.qty, 0);
+  const totalAmountOut = salesOut.reduce((sum, e) => sum + e.amount, 0);
+
   const actualCurrentStock = initialStock + totalStockIn - totalStockOut;
+  const taxableAmount = totalAmountIn - totalAmountOut;
 
   let runningStock = initialStock;
   const entriesWithBalance = filteredEntries.map(entry => {
@@ -639,19 +646,46 @@ const Stock = () => {
               </div>
 
               <div className={styles.statsCards}>
-                <div className={styles.statCard}>
+                <div className={`${styles.statCard} ${styles.statCardIn}`}>
                   <div className={styles.statLabel}>Stock In</div>
-                  <div className={styles.statValue} style={{color: 'var(--success)'}}>{totalStockIn}</div>
-                  <div className={styles.statSub}>Rs. {totalAmountIn.toFixed(2)}</div>
+                  <div className={styles.statMetrics}>
+                    <div className={styles.metricItem}>
+                      <span className={styles.metricSubLabel}>Quantity</span>
+                      <span className={`${styles.metricValue} ${styles.colorSuccess}`}>{totalStockIn} <span className={styles.metricUnit}>{selectedStock?.defaultUnit}</span></span>
+                    </div>
+                    <div className={styles.metricItem}>
+                      <span className={styles.metricSubLabel}>Total Amount In</span>
+                      <span className={`${styles.metricAmount} ${styles.colorSuccess}`}>Rs. {totalAmountIn.toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className={styles.statCard}>
+
+                <div className={`${styles.statCard} ${styles.statCardOut}`}>
                   <div className={styles.statLabel}>Stock Out</div>
-                  <div className={styles.statValue} style={{color: 'var(--error)'}}>{totalStockOut}</div>
-                  <div className={styles.statSub}>Rs. {totalAmountOut.toFixed(2)}</div>
+                  <div className={styles.statMetrics}>
+                    <div className={styles.metricItem}>
+                      <span className={styles.metricSubLabel}>Quantity</span>
+                      <span className={`${styles.metricValue} ${styles.colorError}`}>{totalStockOut} <span className={styles.metricUnit}>{selectedStock?.defaultUnit}</span></span>
+                    </div>
+                    <div className={styles.metricItem}>
+                      <span className={styles.metricSubLabel}>Total Amount Out</span>
+                      <span className={`${styles.metricAmount} ${styles.colorError}`}>Rs. {totalAmountOut.toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className={styles.statCard} style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)'}}>
+
+                <div className={`${styles.statCard} ${styles.statCardCurrent}`}>
                   <div className={styles.statLabel}>Current Stock</div>
-                  <div className={styles.statValue} style={{color: 'var(--accent-primary)'}}>{actualCurrentStock}</div>
+                  <div className={styles.statMetrics}>
+                    <div className={styles.metricItem}>
+                      <span className={styles.metricSubLabel}>Stock Left</span>
+                      <span className={`${styles.metricValue} ${styles.colorPrimary}`}>{actualCurrentStock} <span className={styles.metricUnit}>{selectedStock?.defaultUnit}</span></span>
+                    </div>
+                    <div className={styles.metricItem}>
+                      <span className={styles.metricSubLabel}>Taxable Amount</span>
+                      <span className={`${styles.metricAmount} ${styles.colorPrimary}`}>Rs. {taxableAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

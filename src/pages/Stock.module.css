@@ -276,34 +276,102 @@
 }
 
 .statsCards {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .statCard {
-  background-color: var(--bg-tertiary);
-  padding: 1.25rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  padding: 1rem 1.15rem;
   border-radius: var(--radius-md);
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.statCard:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: var(--shadow-md);
+}
+
+.statCardIn {
+  border-left: 4px solid var(--success);
+}
+
+.statCardOut {
+  border-left: 4px solid var(--error);
+}
+
+.statCardCurrent {
+  border-left: 4px solid var(--accent-primary);
+  background: rgba(59, 130, 246, 0.04);
 }
 
 .statLabel {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-}
-
-.statValue {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.statSub {
   font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statMetrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.metricItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.metricSubLabel {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
   color: var(--text-tertiary);
-  margin-top: 0.25rem;
+  letter-spacing: 0.03em;
+}
+
+.metricValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.metricUnit {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.metricAmount {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.colorSuccess {
+  color: var(--success);
+}
+
+.colorError {
+  color: var(--error);
+}
+
+.colorPrimary {
+  color: var(--accent-primary);
 }
 
 .tableResponsive {
