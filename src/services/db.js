@@ -58,6 +58,50 @@ export const getStocks = async (userId) => {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
+export const getStocksWithCalculatedQty = async (userId, excludeBillId = null) => {
+  const stocks = await getStocks(userId);
+  const bills = await getBills(userId);
+
+  const filteredBills = excludeBillId 
+    ? bills.filter(b => b.id !== excludeBillId)
+    : bills;
+
+  return stocks.map(stock => {
+    let runningStock = (stock.initialStockQuantity !== undefined && stock.initialStockQuantity !== null && stock.initialStockQuantity !== '') 
+      ? Number(stock.initialStockQuantity) 
+      : (Number(stock.currentStock) || 0);
+
+    filteredBills.forEach(bill => {
+      const matchedItems = bill.items?.filter(item => {
+        if (!item) return false;
+        if (item.stockId && stock.id && item.stockId === stock.id) return true;
+        if (item.particularId && stock.particularId && item.particularId === stock.particularId) return true;
+        
+        // Fallback matching by particular name
+        if (item.particular && stock.particularName && item.particular.trim().toLowerCase() === stock.particularName.trim().toLowerCase()) {
+          // If rates are present and different, don't match mismatched prices
+          if (item.rate !== undefined && stock.price !== undefined && Number(item.rate) !== Number(stock.price)) {
+            return false;
+          }
+          return true;
+        }
+        return false;
+      }) || [];
+      
+      matchedItems.forEach(item => {
+        if (bill.type === 'Purchase') runningStock += Number(item.qty) || 0;
+        if (bill.type === 'Sale') runningStock -= Number(item.qty) || 0;
+      });
+    });
+
+    return { 
+      ...stock, 
+      currentStock: runningStock,
+      actualCurrentStock: runningStock
+    };
+  });
+};
+
 export const addStock = async (userId, stockData) => {
   const docRef = await addDoc(getRef(userId, 'stock'), stockData);
   return { id: docRef.id, ...stockData };

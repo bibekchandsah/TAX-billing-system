@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
-import { getStocks, addStock, updateStock, getSettings, deleteRecord, getBills } from '../services/db';
+import { getStocks, addStock, updateStock, getSettings, deleteRecord, getBills, getStocksWithCalculatedQty } from '../services/db';
 import { getFiscalYearDateRange, getMonthIndex, getTodayBSDateString } from '../utils/fiscalYear';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -72,21 +72,7 @@ const Stock = () => {
   const loadStocks = async () => {
     setLoading(true);
     try {
-      const data = await getStocks(user.uid);
-      const allBills = await getBills(user.uid);
-      
-      const computedStocks = data.map(stock => {
-        let runningStock = Number(stock.initialStockQuantity) || 0;
-        allBills.forEach(bill => {
-          const matchedItems = bill.items?.filter(item => item.particular === stock.particularName) || [];
-          matchedItems.forEach(item => {
-            if (bill.type === 'Purchase') runningStock += Number(item.qty);
-            if (bill.type === 'Sale') runningStock -= Number(item.qty);
-          });
-        });
-        return { ...stock, actualCurrentStock: runningStock };
-      });
-      
+      const computedStocks = await getStocksWithCalculatedQty(user.uid);
       setStocks(computedStocks);
       const userSettings = await getSettings(user.uid);
       setSettings(userSettings);

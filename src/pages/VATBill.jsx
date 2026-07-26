@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
-import { getLatestBillNumber, getCustomerByPan, getSettings, addBill, getStocks } from '../services/db';
+import { getLatestBillNumber, getCustomerByPan, getSettings, addBill, getStocksWithCalculatedQty } from '../services/db';
 import NepaliDatePicker from '../components/NepaliDatePicker';
 import { Search, Plus, Trash2, Save, RefreshCw, X } from 'lucide-react';
 import styles from './VATBill.module.css';
@@ -68,7 +68,7 @@ const VATBill = () => {
         }
       }
 
-      const stockData = await getStocks(user.uid);
+      const stockData = await getStocksWithCalculatedQty(user.uid);
       setStocks(stockData);
     } catch (err) {
       console.error(err);
@@ -141,12 +141,22 @@ const VATBill = () => {
     setItems(items.filter(item => item.id !== id));
   };
 
-  const getAvailableStock = (particularName, currentItemId) => {
-    const stockInfo = stocks.find(s => s.particularName === particularName);
+  const getAvailableStock = (stockOrTarget, currentItemId) => {
+    let stockInfo = null;
+    if (typeof stockOrTarget === 'object' && stockOrTarget !== null) {
+      stockInfo = stockOrTarget;
+    } else if (typeof stockOrTarget === 'string') {
+      stockInfo = stocks.find(s => s.id === stockOrTarget || s.particularId === stockOrTarget || s.particularName === stockOrTarget);
+    }
+
     if (!stockInfo) return null;
 
     const usedQty = items
-      .filter(item => item.id !== currentItemId && item.particular === particularName)
+      .filter(item => item.id !== currentItemId && (
+        (item.stockId && item.stockId === stockInfo.id) ||
+        (item.particularId && item.particularId === stockInfo.particularId) ||
+        (item.particular === stockInfo.particularName)
+      ))
       .reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
 
     return stockInfo.currentStock - usedQty;
@@ -165,7 +175,8 @@ const VATBill = () => {
           }
           
           if (item.particular && type === 'Sale' && newValue !== '') {
-            const available = getAvailableStock(item.particular, id);
+            const stockTarget = item.stockId || item.particularId || item.particular;
+            const available = getAvailableStock(stockTarget, id);
             if (available !== null && newValue > available) {
               addToast(`Currently only ${available} is available for ${item.particular}`, 'error');
               newValue = ''; // Clear it completely
@@ -184,7 +195,8 @@ const VATBill = () => {
   };
 
   const filteredStocks = stocks.filter(stock => 
-    stock.particularName.toLowerCase().includes(stockSearch.toLowerCase())
+    stock.particularName.toLowerCase().includes(stockSearch.toLowerCase()) ||
+    (stock.particularId && stock.particularId.includes(stockSearch))
   );
 
   const handleStockInputFocus = (index, value) => {
@@ -213,7 +225,7 @@ const VATBill = () => {
       let newQty = itemToUpdate.qty;
       
       if (type === 'Sale') {
-        const available = getAvailableStock(stock.particularName, itemToUpdate.id);
+        const available = getAvailableStock(stock, itemToUpdate.id);
         if (available !== null && newQty !== '' && newQty > available) {
           addToast(`Currently only ${available} is available for ${stock.particularName}`, 'error');
           newQty = ''; // Clear it completely
@@ -223,6 +235,8 @@ const VATBill = () => {
       const newItems = [...items];
       newItems[index] = {
         ...itemToUpdate,
+        stockId: stock.id,
+        particularId: stock.particularId,
         particular: stock.particularName,
         unit: stock.defaultUnit,
         rate: stock.price,
@@ -507,7 +521,7 @@ const VATBill = () => {
                               <div className={styles.autocompleteItemName}>{stock.particularName}</div>
                               <div className={styles.autocompleteItemDetails}>
                                 <span>Rs. {stock.price}</span>
-                                <span>{type === 'Sale' ? getAvailableStock(stock.particularName, item.id) : stock.currentStock} {stock.defaultUnit} left</span>
+                                <span>{type === 'Sale' ? getAvailableStock(stock, item.id) : stock.currentStock} {stock.defaultUnit} left</span>
                               </div>
                             </li>
                           ))}

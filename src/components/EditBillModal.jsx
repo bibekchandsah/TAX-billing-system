@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
-import { getCustomerByPan, getSettings, getStocks, updateBill } from '../services/db';
+import { getCustomerByPan, getSettings, getStocksWithCalculatedQty, updateBill } from '../services/db';
 import NepaliDatePicker from './NepaliDatePicker';
 import { Plus, Trash2, Save, X, Download } from 'lucide-react';
 import styles from '../pages/VATBill.module.css';
@@ -54,7 +54,7 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
       if (fetchedSettings) {
         setSettings(fetchedSettings);
       }
-      const stockData = await getStocks(user.uid);
+      const stockData = await getStocksWithCalculatedQty(user.uid, bill.id);
       setStocks(stockData);
     } catch (err) {
       console.error(err);
@@ -111,12 +111,22 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
     setItems(items.filter(item => item.id !== id));
   };
 
-  const getAvailableStock = (particularName, currentItemId) => {
-    const stockInfo = stocks.find(s => s.particularName === particularName);
+  const getAvailableStock = (stockOrTarget, currentItemId) => {
+    let stockInfo = null;
+    if (typeof stockOrTarget === 'object' && stockOrTarget !== null) {
+      stockInfo = stockOrTarget;
+    } else if (typeof stockOrTarget === 'string') {
+      stockInfo = stocks.find(s => s.id === stockOrTarget || s.particularId === stockOrTarget || s.particularName === stockOrTarget);
+    }
+
     if (!stockInfo) return null;
 
     const usedQty = items
-      .filter(item => item.id !== currentItemId && item.particular === particularName)
+      .filter(item => item.id !== currentItemId && (
+        (item.stockId && item.stockId === stockInfo.id) ||
+        (item.particularId && item.particularId === stockInfo.particularId) ||
+        (item.particular === stockInfo.particularName)
+      ))
       .reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
 
     return stockInfo.currentStock - usedQty;
@@ -135,7 +145,8 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
           }
           
           if (item.particular && type === 'Sale' && newValue !== '') {
-            const available = getAvailableStock(item.particular, id);
+            const stockTarget = item.stockId || item.particularId || item.particular;
+            const available = getAvailableStock(stockTarget, id);
             if (available !== null && newValue > available) {
               addToast(`Currently only ${available} is available for ${item.particular}`, 'error');
               newValue = '';
@@ -154,7 +165,8 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
   };
 
   const filteredStocks = stocks.filter(stock => 
-    stock.particularName.toLowerCase().includes(stockSearch.toLowerCase())
+    stock.particularName.toLowerCase().includes(stockSearch.toLowerCase()) ||
+    (stock.particularId && stock.particularId.includes(stockSearch))
   );
 
   const handleStockInputFocus = (index, value) => {
@@ -181,7 +193,7 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
       let newQty = itemToUpdate.qty;
       
       if (type === 'Sale') {
-        const available = getAvailableStock(stock.particularName, itemToUpdate.id);
+        const available = getAvailableStock(stock, itemToUpdate.id);
         if (available !== null && newQty !== '' && newQty > available) {
           addToast(`Currently only ${available} is available for ${stock.particularName}`, 'error');
           newQty = '';
@@ -191,6 +203,8 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
       const newItems = [...items];
       newItems[index] = {
         ...itemToUpdate,
+        stockId: stock.id,
+        particularId: stock.particularId,
         particular: stock.particularName,
         unit: stock.defaultUnit,
         rate: stock.price,
@@ -402,7 +416,7 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
                                 <div className={styles.autocompleteItemName}>{stock.particularName}</div>
                                 <div className={styles.autocompleteItemDetails}>
                                   <span>Rs. {stock.price}</span>
-                                  <span>{stock.currentStock} {stock.defaultUnit} left</span>
+                                  <span>{type === 'Sale' ? getAvailableStock(stock, item.id) : stock.currentStock} {stock.defaultUnit} left</span>
                                 </div>
                               </li>
                             ))}
