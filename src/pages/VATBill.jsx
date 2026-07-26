@@ -232,6 +232,10 @@ const VATBill = () => {
         }
       }
 
+      const rateToUse = type === 'Purchase' 
+        ? (stock.purchaseRate !== undefined && stock.purchaseRate !== '' ? Number(stock.purchaseRate) : (Number(stock.price) || 0))
+        : (stock.salesRate !== undefined && stock.salesRate !== '' ? Number(stock.salesRate) : (Number(stock.price) || 0));
+
       const newItems = [...items];
       newItems[index] = {
         ...itemToUpdate,
@@ -239,9 +243,9 @@ const VATBill = () => {
         particularId: stock.particularId,
         particular: stock.particularName,
         unit: stock.defaultUnit,
-        rate: stock.price,
+        rate: rateToUse,
         qty: newQty,
-        amount: Number((newQty * stock.price).toFixed(2))
+        amount: Number(((Number(newQty) || 0) * rateToUse).toFixed(2))
       };
       setItems(newItems);
     }
@@ -520,7 +524,7 @@ const VATBill = () => {
                             >
                               <div className={styles.autocompleteItemName}>{stock.particularName}</div>
                               <div className={styles.autocompleteItemDetails}>
-                                <span>Rs. {stock.price}</span>
+                                <span>Rs. {type === 'Purchase' ? (stock.purchaseRate !== undefined && stock.purchaseRate !== '' ? stock.purchaseRate : stock.price) : (stock.salesRate !== undefined && stock.salesRate !== '' ? stock.salesRate : stock.price)}</span>
                                 <span>{type === 'Sale' ? getAvailableStock(stock, item.id) : stock.currentStock} {stock.defaultUnit} left</span>
                               </div>
                             </li>
