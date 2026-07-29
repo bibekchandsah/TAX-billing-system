@@ -408,24 +408,6 @@ const VATBill = () => {
       <div className={`${styles.card} glass-panel`}>
         <div className={styles.formGrid}>
           <div className="form-group">
-            <label className="form-label">Bill No *</label>
-            <input 
-              type="text" 
-              name="billNo"
-              className="input-field" 
-              value={billNo} 
-              onChange={(e) => setBillNo(e.target.value)} 
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Date (BS) *</label>
-            <NepaliDatePicker 
-              value={date} 
-              onChange={setDate} 
-              required 
-            />
-          </div>
-          <div className="form-group">
             <label className="form-label">PAN/VAT No. *</label>
             <input 
               ref={panInputRef}
@@ -441,6 +423,24 @@ const VATBill = () => {
               }}
               placeholder="9 digits"
               autoFocus
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Bill No *</label>
+            <input 
+              type="text" 
+              name="billNo"
+              className="input-field" 
+              value={billNo} 
+              onChange={(e) => setBillNo(e.target.value)} 
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Date (BS) *</label>
+            <NepaliDatePicker 
+              value={date} 
+              onChange={setDate} 
+              required 
             />
           </div>
           <div className="form-group">
@@ -612,15 +612,15 @@ const VATBill = () => {
       </div>
 
       <div className={styles.actions}>
-        <button className="btn-secondary" onClick={handleReset}>
-          <RefreshCw size={18} /> Reset
-        </button>
         <button 
           className="btn-primary" 
           onClick={handleSave}
           disabled={loading || items.length === 0 || customer.pan.length !== 9}
         >
           <Save size={18} /> {loading ? 'Saving...' : 'Save Bill'}
+        </button>
+        <button className="btn-secondary" onClick={handleReset}>
+          <RefreshCw size={18} /> Reset
         </button>
       </div>
     </div>

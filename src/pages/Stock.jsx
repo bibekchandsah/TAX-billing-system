@@ -353,15 +353,17 @@ const Stock = () => {
   const initialQty = Number(selectedStock?.initialStockQuantity) || 0;
   const purchaseRate = Number(selectedStock?.purchaseRate ?? selectedStock?.price ?? 0);
   const initialDate = selectedStock?.date || '';
+  const initialAmt = initialQty * purchaseRate;
 
   let openingStockQty = 0;
   let openingStockAmt = 0;
 
-  // Add initial stock if created before or on effFromDate (or if no effFromDate filter)
-  if (initialQty > 0 && (!effFromDate || !initialDate || initialDate <= effFromDate)) {
+  // Add initial stock if it was created before or during the active period
+  const isInitialValid = !effFromDate || !initialDate || (effToDate ? initialDate <= effToDate : true);
+  if (initialQty > 0 && isInitialValid) {
     openingStockQty += initialQty;
-    // USER EXPLICITLY REQUESTED TO IGNORE OPENING AMOUNT (INITIAL STOCK) IN THE TOTAL
-    // openingStockAmt += initialAmt; 
+    // Add the initial stock amount so it shows in the Opening Amount card
+    openingStockAmt += initialAmt; 
   }
 
   // Add purchases (+) and subtract sales (-) that occurred BEFORE effFromDate to get exact carried-forward opening balance
