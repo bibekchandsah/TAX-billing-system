@@ -320,34 +320,94 @@ const Stock = () => {
     s.particularId.includes(searchTerm)
   );
 
-  const filteredEntries = stockEntries.filter(entry => {
-    let effFromDate = fromDate;
-    let effToDate = toDate;
-    
-    if (!fromDate && !toDate && activeFiscalYear) {
-      if (activeMonth === 'current') {
-        const todayStr = getTodayBSDateString();
-        const [yr, mo] = todayStr.split('-');
-        const pad = (n) => String(n).padStart(2, '0');
-        effFromDate = `${yr}-${pad(Number(mo))}-01`;
-        effToDate   = `${yr}-${pad(Number(mo))}-32`;
-      } else if (activeMonth) {
-        const [yr, mo] = activeMonth.split('-');
-        effFromDate = `${yr}-${mo}-01`;
-        effToDate   = `${yr}-${mo}-32`;
-      } else {
-        const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
-        const startMonthIdx = getMonthIndex(startMonth);
-        const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
-        effFromDate = range.from;
-        effToDate = range.to;
-      }
+  let effFromDate = fromDate;
+  let effToDate = toDate;
+  
+  if (!fromDate && !toDate && activeFiscalYear) {
+    if (activeMonth === 'current') {
+      const todayStr = getTodayBSDateString();
+      const [yr, mo] = todayStr.split('-');
+      const pad = (n) => String(n).padStart(2, '0');
+      effFromDate = `${yr}-${pad(Number(mo))}-01`;
+      effToDate   = `${yr}-${pad(Number(mo))}-32`;
+    } else if (activeMonth) {
+      const [yr, mo] = activeMonth.split('-');
+      effFromDate = `${yr}-${mo}-01`;
+      effToDate   = `${yr}-${mo}-32`;
+    } else {
+      const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
+      const startMonthIdx = getMonthIndex(startMonth);
+      const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
+      effFromDate = range.from;
+      effToDate = range.to;
     }
+  }
 
+  const filteredEntries = stockEntries.filter(entry => {
     if (effFromDate && entry.date < effFromDate) return false;
     if (effToDate && entry.date > effToDate) return false;
     return true;
   });
+
+  // Calculate opening stock quantity before effFromDate
+  const initialQty = Number(selectedStock?.initialStockQuantity) || 0;
+  const purchaseRate = Number(selectedStock?.purchaseRate ?? selectedStock?.price ?? 0);
+  const initialDate = selectedStock?.date || '';
+
+  let openingStockQty = 0;
+  let openingStockAmt = 0;
+
+  // Add initial stock if created before or on effFromDate (or if no effFromDate filter)
+  if (initialQty > 0 && (!effFromDate || !initialDate || initialDate <= effFromDate)) {
+    openingStockQty += initialQty;
+    // USER EXPLICITLY REQUESTED TO IGNORE OPENING AMOUNT (INITIAL STOCK) IN THE TOTAL
+    // openingStockAmt += initialAmt; 
+  }
+
+  // Add purchases (+) and subtract sales (-) that occurred BEFORE effFromDate to get exact carried-forward opening balance
+  if (effFromDate) {
+    stockEntries.forEach(entry => {
+      if (entry.date < effFromDate) {
+        if (entry.type === 'Purchase') {
+          openingStockQty += entry.qty;
+          // Accumulate prior In for next month's opening amount
+          openingStockAmt += entry.amount;
+        } else if (entry.type === 'Sale') {
+          openingStockQty -= entry.qty;
+          // Accumulate prior Out for next month's opening amount
+          openingStockAmt -= entry.amount;
+        }
+      }
+    });
+  }
+
+  // Calculate Period Transactions & Stats
+  const purchasesIn = filteredEntries.filter(e => e.type === 'Purchase');
+  const totalStockIn = purchasesIn.reduce((sum, e) => sum + e.qty, 0);
+  const totalAmountIn = purchasesIn.reduce((sum, e) => sum + e.amount, 0);
+
+  const salesOut = filteredEntries.filter(e => e.type === 'Sale');
+  const totalStockOut = salesOut.reduce((sum, e) => sum + e.qty, 0);
+  const totalAmountOut = salesOut.reduce((sum, e) => sum + e.amount, 0);
+
+  // Running balance starting from opening stock of the period
+  let runningStock = openingStockQty;
+  const entriesWithBalance = filteredEntries.map(entry => {
+    if (entry.type === 'Purchase') {
+      runningStock += entry.qty;
+    } else if (entry.type === 'Sale') {
+      runningStock -= entry.qty;
+    }
+    return { ...entry, runningBalance: runningStock };
+  });
+
+  const closingStockQty = runningStock;
+  const actualCurrentStock = closingStockQty;
+  
+  // User explicitly requested Closing Amount to be strictly (Period In - Period Out) + Prior Carried Forward (Opening Amount)
+  // But without Initial Stock included in Opening Amount!
+  const closingStockAmount = openingStockAmt + totalAmountIn - totalAmountOut;
+  const taxableAmount = closingStockAmount;
 
   const generateStockLedgerPDF = () => {
     if (!selectedStock) return;
@@ -401,67 +461,47 @@ const Stock = () => {
     const tableColumn = ["Date (BS)", "Type", "Bill Number", "Particular (Customer)", "Stock In", "Amount In", "Stock Out", "Amount Out", "Current Stock"];
     const tableRows = [];
 
-    // Opening Balance Row
-    let effFromDate = fromDate;
-    let effToDate = toDate;
-    
-    if (!fromDate && !toDate && activeFiscalYear) {
-      if (activeMonth === 'current') {
-        const todayStr = getTodayBSDateString();
-        const [yr, mo] = todayStr.split('-');
-        const pad = (n) => String(n).padStart(2, '0');
-        effFromDate = `${yr}-${pad(Number(mo))}-01`;
-        effToDate   = `${yr}-${pad(Number(mo))}-32`;
-      } else if (activeMonth) {
-        const [yr, mo] = activeMonth.split('-');
-        effFromDate = `${yr}-${mo}-01`;
-        effToDate   = `${yr}-${mo}-32`;
-      } else {
-        const startMonth = settings?.fiscalYearStartMonth || 'Shrawan';
-        const startMonthIdx = getMonthIndex(startMonth);
-        const range = getFiscalYearDateRange(activeFiscalYear, startMonthIdx);
-        effFromDate = range.from;
-        effToDate = range.to;
-      }
-    }
+    // 1. TOP: Opening Stock Row in PDF
+    tableRows.push([
+      effFromDate || initialDate || "-",
+      "Opening Stock",
+      selectedStock.billNumber || "-",
+      "Opening Stock Balance",
+      openingStockQty,
+      `Rs. ${Math.max(0, openingStockAmt).toFixed(2)}`,
+      "-",
+      "-",
+      openingStockQty
+    ]);
 
-    if (selectedStock.initialStockQuantity > 0 && (!effFromDate || selectedStock.date >= effFromDate) && (!effToDate || selectedStock.date <= effToDate)) {
-      tableRows.push([
-        selectedStock.date || "",
-        "Opening Stock",
-        selectedStock.billNumber || "",
-        "Initial Stock",
-        selectedStock.initialStockQuantity,
-        `Rs. ${(selectedStock.initialStockQuantity * selectedStock.price).toFixed(2)}`,
-        "",
-        "",
-        selectedStock.initialStockQuantity
-      ]);
-    }
-
-    // We need to re-calculate running balance for the PDF if we want it to match the view
-    const initialStock = Number(selectedStock?.initialStockQuantity) || 0;
-    let runningStock = initialStock;
-
-    filteredEntries.forEach(entry => {
-      if (entry.type === 'Purchase') {
-        runningStock += entry.qty;
-      } else if (entry.type === 'Sale') {
-        runningStock -= entry.qty;
-      }
-      
+    // 2. MIDDLE: Period Entries
+    entriesWithBalance.forEach(entry => {
       tableRows.push([
         entry.date,
         entry.type,
         entry.billNumber,
         entry.customerName,
-        entry.type === 'Purchase' ? entry.qty : "",
-        entry.type === 'Purchase' ? `Rs. ${entry.amount.toFixed(2)}` : "",
-        entry.type === 'Sale' ? entry.qty : "",
-        entry.type === 'Sale' ? `Rs. ${entry.amount.toFixed(2)}` : "",
-        runningStock
+        entry.type === 'Purchase' ? entry.qty : "-",
+        entry.type === 'Purchase' ? `Rs. ${entry.amount.toFixed(2)}` : "-",
+        entry.type === 'Sale' ? entry.qty : "-",
+        entry.type === 'Sale' ? `Rs. ${entry.amount.toFixed(2)}` : "-",
+        entry.runningBalance
       ]);
     });
+
+    // 3. BOTTOM: Closing Stock Row in PDF
+    const closingDate = effToDate || (entriesWithBalance.length > 0 ? entriesWithBalance[entriesWithBalance.length - 1].date : effFromDate || "-");
+    tableRows.push([
+      closingDate,
+      "Closing Stock",
+      "-",
+      "Closing Stock Balance",
+      "-",
+      "-",
+      "-",
+      `Rs. ${taxableAmount.toFixed(2)}`,
+      `${closingStockQty} ${selectedStock.defaultUnit || 'Pcs'}`
+    ]);
 
     autoTable(doc, {
       startY: yPos,
@@ -492,32 +532,6 @@ const Stock = () => {
     // Open PDF in a new tab for preview and printing
     window.open(doc.output('bloburl'), '_blank');
   };
-
-  // Calculate dynamic stats for selected stock based on filtered entries
-  const initialStock = Number(selectedStock?.initialStockQuantity) || 0;
-  const initialStockRate = Number(selectedStock?.purchaseRate ?? selectedStock?.price ?? 0);
-  const initialStockAmt = initialStock * initialStockRate;
-
-  const purchasesIn = filteredEntries.filter(e => e.type === 'Purchase');
-  const totalStockIn = purchasesIn.reduce((sum, e) => sum + e.qty, 0);
-  const totalAmountIn = (initialStock > 0 ? initialStockAmt : 0) + purchasesIn.reduce((sum, e) => sum + e.amount, 0);
-
-  const salesOut = filteredEntries.filter(e => e.type === 'Sale');
-  const totalStockOut = salesOut.reduce((sum, e) => sum + e.qty, 0);
-  const totalAmountOut = salesOut.reduce((sum, e) => sum + e.amount, 0);
-
-  const actualCurrentStock = initialStock + totalStockIn - totalStockOut;
-  const taxableAmount = totalAmountIn - totalAmountOut;
-
-  let runningStock = initialStock;
-  const entriesWithBalance = filteredEntries.map(entry => {
-    if (entry.type === 'Purchase') {
-      runningStock += entry.qty;
-    } else if (entry.type === 'Sale') {
-      runningStock -= entry.qty;
-    }
-    return { ...entry, runningBalance: runningStock };
-  });
 
   return (
     <div className={`animate-fade-in ${styles.container}`}>
@@ -646,6 +660,22 @@ const Stock = () => {
               </div>
 
               <div className={styles.statsCards}>
+                {/* 1. Opening Stock Card */}
+                <div className={`${styles.statCard} ${styles.statCardOpening}`}>
+                  <div className={styles.statLabel}>Opening Stock</div>
+                  <div className={styles.statMetrics}>
+                    <div className={styles.metricItem}>
+                      <span className={styles.metricSubLabel}>Opening Qty</span>
+                      <span className={`${styles.metricValue} ${styles.colorPurple}`}>{openingStockQty} <span className={styles.metricUnit}>{selectedStock?.defaultUnit}</span></span>
+                    </div>
+                    <div className={styles.metricItem}>
+                      <span className={styles.metricSubLabel}>Opening Amount</span>
+                      <span className={`${styles.metricAmount} ${styles.colorPurple}`}>Rs. {Math.max(0, openingStockAmt).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Stock In Card */}
                 <div className={`${styles.statCard} ${styles.statCardIn}`}>
                   <div className={styles.statLabel}>Stock In</div>
                   <div className={styles.statMetrics}>
@@ -660,6 +690,7 @@ const Stock = () => {
                   </div>
                 </div>
 
+                {/* 3. Stock Out Card */}
                 <div className={`${styles.statCard} ${styles.statCardOut}`}>
                   <div className={styles.statLabel}>Stock Out</div>
                   <div className={styles.statMetrics}>
@@ -674,15 +705,16 @@ const Stock = () => {
                   </div>
                 </div>
 
-                <div className={`${styles.statCard} ${styles.statCardCurrent}`}>
-                  <div className={styles.statLabel}>Current Stock</div>
+                {/* 4. Closing Stock Card */}
+                <div className={`${styles.statCard} ${styles.statCardClosing}`}>
+                  <div className={styles.statLabel}>Closing Stock</div>
                   <div className={styles.statMetrics}>
                     <div className={styles.metricItem}>
-                      <span className={styles.metricSubLabel}>Stock Left</span>
-                      <span className={`${styles.metricValue} ${styles.colorPrimary}`}>{actualCurrentStock} <span className={styles.metricUnit}>{selectedStock?.defaultUnit}</span></span>
+                      <span className={styles.metricSubLabel}>Closing Qty</span>
+                      <span className={`${styles.metricValue} ${styles.colorPrimary}`}>{closingStockQty} <span className={styles.metricUnit}>{selectedStock?.defaultUnit}</span></span>
                     </div>
                     <div className={styles.metricItem}>
-                      <span className={styles.metricSubLabel}>Taxable Amount</span>
+                      <span className={styles.metricSubLabel}>Closing Amount</span>
                       <span className={`${styles.metricAmount} ${styles.colorPrimary}`}>Rs. {taxableAmount.toFixed(2)}</span>
                     </div>
                   </div>
@@ -707,74 +739,85 @@ const Stock = () => {
                   </thead>
                   <tbody>
                     {loadingEntries ? (
-                      <tr><td colSpan="9" style={{textAlign: 'center', padding: '2rem'}}>Loading...</td></tr>
-                    ) : filteredEntries.length === 0 && !selectedStock?.initialStockQuantity ? (
-                      <tr><td colSpan="9" style={{textAlign: 'center', padding: '2rem'}}>No records found.</td></tr>
+                      <tr><td colSpan="10" style={{textAlign: 'center', padding: '2rem'}}>Loading...</td></tr>
                     ) : (
                       <>
-                        {/* Initial Stock Row */}
-                        {selectedStock?.initialStockQuantity > 0 && (!fromDate || selectedStock.date >= fromDate) && (!toDate || selectedStock.date <= toDate) && (
-                          <tr key="initial-stock">
-                            <td>{selectedStock.date || '-'}</td>
-                            <td><span className={`${styles.tag} ${styles.tagPurchase}`}>Opening</span></td>
-                            <td>{selectedStock.billNumber || '-'}</td>
-                            <td>Initial Stock</td>
-                            <td style={{color: 'var(--success)', fontWeight: 600}}>{selectedStock.initialStockQuantity}</td>
-                            <td>Rs. {(selectedStock.initialStockQuantity * selectedStock.price).toFixed(2)}</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td style={{color: 'var(--accent-primary)', fontWeight: 600}}>{selectedStock.initialStockQuantity}</td>
-                            <td>-</td>
-                          </tr>
-                        )}
-                        {/* Render entries with calculated running balance */}
-                      {entriesWithBalance.map(entry => (
-                        <tr key={entry.id}>
-                          <td>{entry.date}</td>
-                          <td>
-                            <span className={`${styles.tag} ${entry.type === 'Sale' ? styles.tagSale : styles.tagPurchase}`}>
-                              {entry.type}
-                            </span>
-                          </td>
-                          <td>{entry.billNumber}</td>
-                          <td>{entry.customerName}</td>
-                          
-                          {/* Stock In logic */}
-                          {entry.type === 'Purchase' ? (
-                            <>
-                              <td style={{color: 'var(--success)', fontWeight: 600}}>{entry.qty}</td>
-                              <td>Rs. {entry.amount.toFixed(2)}</td>
-                            </>
-                          ) : (
-                            <>
-                              <td>-</td>
-                              <td>-</td>
-                            </>
-                          )}
-
-                          {/* Stock Out logic */}
-                          {entry.type === 'Sale' ? (
-                            <>
-                              <td style={{color: 'var(--error)', fontWeight: 600}}>{entry.qty}</td>
-                              <td>Rs. {entry.amount.toFixed(2)}</td>
-                            </>
-                          ) : (
-                            <>
-                              <td>-</td>
-                              <td>-</td>
-                            </>
-                          )}
-                          
-                          <td style={{color: 'var(--accent-primary)', fontWeight: 600}}>{entry.runningBalance}</td>
-
-                          <td>
-                            <div className={styles.actions}>
-                              <button className={styles.iconBtn} onClick={() => handleEditBillRequest(entry)}><Edit size={14} /></button>
-                              <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => handleDeleteBillRequest(entry)}><Trash2 size={14} /></button>
-                            </div>
-                          </td>
+                        {/* Top Row: Opening Stock */}
+                        <tr key="opening-stock" style={{ backgroundColor: 'rgba(59, 130, 246, 0.06)', fontWeight: 600 }}>
+                          <td>{effFromDate || initialDate || '-'}</td>
+                          <td><span className={`${styles.tag} ${styles.tagPurchase}`}>Opening</span></td>
+                          <td>{selectedStock?.billNumber || '-'}</td>
+                          <td>Opening Stock Balance</td>
+                          <td style={{color: 'var(--success)', fontWeight: 600}}>{openingStockQty}</td>
+                          <td>Rs. {Math.max(0, openingStockAmt).toFixed(2)}</td>
+                          <td>-</td>
+                          <td>-</td>
+                          <td style={{color: 'var(--accent-primary)', fontWeight: 600}}>{openingStockQty}</td>
+                          <td>-</td>
                         </tr>
-                      ))}
+
+                        {/* Middle Rows: Transactions in Period */}
+                        {entriesWithBalance.map(entry => (
+                          <tr key={entry.id}>
+                            <td>{entry.date}</td>
+                            <td>
+                              <span className={`${styles.tag} ${entry.type === 'Sale' ? styles.tagSale : styles.tagPurchase}`}>
+                                {entry.type}
+                              </span>
+                            </td>
+                            <td>{entry.billNumber}</td>
+                            <td>{entry.customerName}</td>
+                            
+                            {/* Stock In logic */}
+                            {entry.type === 'Purchase' ? (
+                              <>
+                                <td style={{color: 'var(--success)', fontWeight: 600}}>{entry.qty}</td>
+                                <td>Rs. {entry.amount.toFixed(2)}</td>
+                              </>
+                            ) : (
+                              <>
+                                <td>-</td>
+                                <td>-</td>
+                              </>
+                            )}
+
+                            {/* Stock Out logic */}
+                            {entry.type === 'Sale' ? (
+                              <>
+                                <td style={{color: 'var(--error)', fontWeight: 600}}>{entry.qty}</td>
+                                <td>Rs. {entry.amount.toFixed(2)}</td>
+                              </>
+                            ) : (
+                              <>
+                                <td>-</td>
+                                <td>-</td>
+                              </>
+                            )}
+                            
+                            <td style={{color: 'var(--accent-primary)', fontWeight: 600}}>{entry.runningBalance}</td>
+
+                            <td>
+                              <div className={styles.actions}>
+                                <button className={styles.iconBtn} onClick={() => handleEditBillRequest(entry)}><Edit size={14} /></button>
+                                <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => handleDeleteBillRequest(entry)}><Trash2 size={14} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+
+                        {/* Bottom Row: Closing Stock */}
+                        <tr key="closing-stock" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', fontWeight: 700, borderTop: '2px solid var(--border-color)' }}>
+                          <td>{effToDate || (entriesWithBalance.length > 0 ? entriesWithBalance[entriesWithBalance.length - 1].date : effFromDate || '-')}</td>
+                          <td><span className={styles.tag} style={{ backgroundColor: 'var(--accent-primary)', color: '#ffffff' }}>Closing</span></td>
+                          <td>-</td>
+                          <td>Closing Stock Balance</td>
+                          <td>-</td>
+                          <td>-</td>
+                          <td>-</td>
+                          <td style={{color: 'var(--accent-primary)', fontWeight: 600}}>Rs. {taxableAmount.toFixed(2)}</td>
+                          <td style={{color: 'var(--accent-primary)', fontWeight: 700, fontSize: '0.95rem'}}>{closingStockQty} {selectedStock?.defaultUnit}</td>
+                          <td>-</td>
+                        </tr>
                       </>
                     )}
                   </tbody>
