@@ -56,6 +56,7 @@ const Stock = () => {
     date: '',
     billNumber: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) loadStocks();
@@ -257,8 +258,12 @@ const Stock = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    
     if (Number(formData.initialStockQuantity) > 0 && !formData.date) {
       addToast("Date is required when Initial Stock Quantity is entered.", "error");
+      setIsSubmitting(false);
       return;
     }
 
@@ -267,12 +272,14 @@ const Stock = () => {
       const exists = stocks.find(s => s.particularId === pid && s.id !== stockToEdit.id);
       if (exists) {
         addToast(`Particular ID already exists for "${exists.particularName}".`, "error");
+        setIsSubmitting(false);
         return;
       }
     } else {
       const exists = stocks.find(s => s.particularId === pid);
       if (exists) {
         addToast(`Particular ID already exists for "${exists.particularName}".`, "error");
+        setIsSubmitting(false);
         return;
       }
     }
@@ -312,6 +319,8 @@ const Stock = () => {
     } catch (err) {
       console.error("Error adding stock:", err);
       alert("Failed to add particular");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -916,7 +925,9 @@ const Stock = () => {
             
             <div className={styles.modalFooter}>
               <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-              <button type="submit" form="add-stock-form" className="btn-primary">Add Particular</button>
+              <button type="submit" form="add-stock-form" className="btn-primary" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (isEditingStock ? 'Update Particular' : 'Add Particular')}
+              </button>
             </div>
           </div>
         </div>,

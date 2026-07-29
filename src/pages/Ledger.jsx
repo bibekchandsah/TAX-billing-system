@@ -56,6 +56,7 @@ const Ledger = () => {
     particular: 'Opening Balance',
     billNumber: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) loadCustomers();
@@ -233,14 +234,18 @@ const Ledger = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     
     if (!formData.panVatNo || formData.panVatNo.length !== 9) {
       addToast("PAN/VAT No. must be exactly 9 digits.", "error");
+      setIsSubmitting(false);
       return;
     }
 
     if (formData.openingBalance && !formData.date) {
       addToast("Date is required when Opening Balance is entered.", "error");
+      setIsSubmitting(false);
       return;
     }
 
@@ -249,12 +254,14 @@ const Ledger = () => {
       const exists = customers.find(c => c.panVatNo === formData.panVatNo && c.id !== customerToEdit.id);
       if (exists) {
         addToast(`PAN/VAT No. already exists for customer "${exists.customerName}".`, 'error');
+        setIsSubmitting(false);
         return;
       }
     } else {
       const exists = customers.find(c => c.panVatNo === formData.panVatNo);
       if (exists) {
         addToast(`PAN/VAT No. already exists for customer "${exists.customerName}".`, 'error');
+        setIsSubmitting(false);
         return;
       }
     }
@@ -283,6 +290,8 @@ const Ledger = () => {
     } catch (err) {
       console.error("Error saving customer:", err);
       alert("Failed to save customer");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -725,8 +734,8 @@ const Ledger = () => {
                       <input type="text" className="input-field" name="particular" value={formData.particular} onChange={handleInputChange} required />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Bill Number *</label>
-                      <input type="text" className="input-field" name="billNumber" value={formData.billNumber} onChange={handleInputChange} required />
+                      <label className="form-label">Bill Number</label>
+                      <input type="text" className="input-field" name="billNumber" value={formData.billNumber} onChange={handleInputChange} />
                     </div>
                   </>
                 )}
@@ -740,8 +749,8 @@ const Ledger = () => {
               }}>
                 Cancel
               </button>
-              <button type="submit" form="add-customer-form" className="btn-primary">
-                <Save size={18} /> {isEditingCustomer ? 'Save Changes' : 'Save Customer'}
+              <button type="submit" form="add-customer-form" className="btn-primary" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : <><Save size={18} /> {isEditingCustomer ? 'Save Changes' : 'Save Customer'}</>}
               </button>
             </div>
           </div>
