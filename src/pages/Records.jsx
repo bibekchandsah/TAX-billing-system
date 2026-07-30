@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { getBills, deleteRecord, getSettings } from '../services/db';
 import { getFiscalYearDateRange, getMonthIndex, getTodayBSDateString } from '../utils/fiscalYear';
-import { Search, Filter, Eye, Edit, Download, Trash2, X } from 'lucide-react';
+import { Search, Filter, Eye, Edit, Download, Trash2, X, Printer } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import NepaliDatePicker from '../components/NepaliDatePicker';
@@ -291,6 +291,111 @@ const Records = () => {
     
   const taxableAmount = totalSaleAmount - totalPurchaseAmount;
 
+  const generateRecordsPDF = () => {
+    const doc = new jsPDF();
+    const margin = 14;
+    let yPos = margin + 10;
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text(settings?.businessName || profile?.businessName || "Business Name", 105, yPos, { align: "center" });
+    yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    
+    const addressParts = [];
+    if (settings?.businessAddress) addressParts.push(settings.businessAddress);
+    if (settings?.businessContact) addressParts.push(`Phone: ${settings.businessContact}`);
+    if (settings?.panVatNo) addressParts.push(`PAN/VAT: ${settings.panVatNo}`);
+    
+    const addressLine = addressParts.length > 0 ? addressParts.join(' | ') : '';
+    if (addressLine) {
+      doc.text(addressLine, 105, yPos, { align: "center" });
+      yPos += 12;
+    } else {
+      yPos += 4;
+    }
+
+    // Title
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("SALES AND PURCHASE RECORDS", 105, yPos, { align: "center" });
+    yPos += 12;
+
+    // Date Range
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const dateText = (fromDate || toDate) ? 
+      `Date Range: ${fromDate || '...'} to ${toDate || '...'}` : 
+      `Date Range: All`;
+    doc.text(dateText, margin, yPos);
+    
+    yPos += 10;
+
+    // Table Data
+    const tableColumn = ["Date (BS)", "Bill No", "Customer Name", "PAN/VAT", "Type", "Total Sale", "Total Purchase"];
+    const tableRows = [];
+
+    filteredBills.forEach(bill => {
+      tableRows.push([
+        bill.date,
+        bill.billNumber,
+        bill.customerName,
+        bill.panVatNo || '-',
+        bill.type,
+        bill.type === 'Sale' ? `Rs. ${bill.total?.toFixed(2)}` : '-',
+        bill.type === 'Purchase' ? `Rs. ${bill.total?.toFixed(2)}` : '-'
+      ]);
+    });
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [tableColumn],
+      body: tableRows,
+      theme: 'grid',
+      tableLineWidth: 0.1,
+      tableLineColor: 0,
+      styles: { 
+        fontSize: 8, 
+        cellPadding: 2,
+        textColor: 0,
+        fillColor: 255,
+        lineWidth: { top: 0, right: 0.1, bottom: 0, left: 0.1 },
+        lineColor: 0
+      },
+      headStyles: { 
+        halign: 'center',
+        fontStyle: 'bold',
+        fontSize: 9,
+        lineWidth: { top: 0.1, right: 0.1, bottom: 0.5, left: 0.1 }
+      },
+      bodyStyles: { 
+        halign: 'center'
+      },
+      footStyles: {
+        fontStyle: 'bold',
+        halign: 'center',
+        lineWidth: { top: 0.1, right: 0.1, bottom: 0.1, left: 0.1 }
+      },
+      foot: [
+        [
+          '', '', '', '', 'Total:', 
+          `Rs. ${totalSaleAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 
+          `Rs. ${totalPurchaseAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+        ]
+      ]
+    });
+    
+    const finalY = doc.lastAutoTable.finalY + 10;
+    
+    doc.setFont("helvetica", "bold");
+    doc.text(`Taxable Amount: Rs. ${taxableAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin, finalY);
+
+    window.open(doc.output('bloburl'), '_blank');
+  };
+
   return (
     <div className={` ${styles.container}`}>
       <div className={styles.summaryCards}>
@@ -347,6 +452,9 @@ const Records = () => {
                 Clear Filters
               </button>
             )}
+            <button className="btn-primary" onClick={generateRecordsPDF} style={{marginLeft: 'auto'}}>
+              <Printer size={18} /> Print Statement
+            </button>
           </div>
         </div>
 

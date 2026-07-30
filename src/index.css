@@ -265,3 +265,22 @@ input, select, textarea {
   bottom: calc(100% + 4px) !important;
   left: 0 !important;
 }
+
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  [class*="sidebar"], [class*="topbar"], .btn-primary, .btn-secondary, .btn-danger, [class*="overlay"] {
+    display: none !important;
+  }
+
+  [class*="main"], [class*="content"] {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+}

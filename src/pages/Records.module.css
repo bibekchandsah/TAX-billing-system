@@ -339,3 +339,55 @@
 .summaryCardValue.info {
   color: var(--accent-primary);
 }
+
+@media print {
+  /* Hide unnecessary elements on print */
+  .toolbar {
+    display: none !important;
+  }
+  
+  .table th:last-child,
+  .table td:last-child {
+    display: none !important;
+  }
+  
+  .summaryCard {
+    border: 1px solid #000 !important;
+    background-color: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  .summaryCardTitle, .summaryCardValue {
+    color: #000 !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+  }
+
+  .badge {
+    border: 1px solid #000;
+    color: #000 !important;
+    background-color: transparent !important;
+  }
+
+  .table th, .table td {
+    color: #000 !important;
+    border-color: #000 !important;
+  }
+  
+  /* Prevent table splitting where possible */
+  tr {
+    page-break-inside: avoid;
+  }
+}
