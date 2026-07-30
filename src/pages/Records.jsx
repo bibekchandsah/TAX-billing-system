@@ -281,8 +281,39 @@ const Records = () => {
     return matchesSearch && matchesFromDate && matchesToDate;
   });
 
+  const totalSaleAmount = filteredBills
+    .filter(bill => bill.type === 'Sale')
+    .reduce((sum, bill) => sum + (bill.total || 0), 0);
+    
+  const totalPurchaseAmount = filteredBills
+    .filter(bill => bill.type === 'Purchase')
+    .reduce((sum, bill) => sum + (bill.total || 0), 0);
+    
+  const taxableAmount = totalSaleAmount - totalPurchaseAmount;
+
   return (
     <div className={` ${styles.container}`}>
+      <div className={styles.summaryCards}>
+        <div className={`${styles.summaryCard} glass-panel`}>
+          <span className={styles.summaryCardTitle}>Total Sale Amount</span>
+          <span className={`${styles.summaryCardValue} ${styles.success}`}>
+            Rs. {totalSaleAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          </span>
+        </div>
+        <div className={`${styles.summaryCard} glass-panel`}>
+          <span className={styles.summaryCardTitle}>Total Purchase Amount</span>
+          <span className={`${styles.summaryCardValue} ${styles.info}`}>
+            Rs. {totalPurchaseAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          </span>
+        </div>
+        <div className={`${styles.summaryCard} glass-panel`}>
+          <span className={styles.summaryCardTitle}>Taxable Amount</span>
+          <span className={styles.summaryCardValue}>
+            Rs. {taxableAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          </span>
+        </div>
+      </div>
+
       <div className={`${styles.card} glass-panel`}>
         <div className={styles.toolbar}>
           <div className={styles.searchBox}>
@@ -327,8 +358,8 @@ const Records = () => {
                 <th>Date</th>
                 <th>Customer Name</th>
                 <th>Type</th>
-                <th>Total</th>
-                <th>Total with Tax</th>
+                <th>Total Sale</th>
+                <th>Total Purchase</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -351,8 +382,12 @@ const Records = () => {
                         {bill.type}
                       </span>
                     </td>
-                    <td>Rs. {bill.total?.toFixed(2)}</td>
-                    <td style={{fontWeight: 600}}>Rs. {bill.totalAmountWithTax?.toFixed(2)}</td>
+                    <td>
+                      {bill.type === 'Sale' ? `Rs. ${bill.total?.toFixed(2)}` : '-'}
+                    </td>
+                    <td>
+                      {bill.type === 'Purchase' ? `Rs. ${bill.total?.toFixed(2)}` : '-'}
+                    </td>
                     <td>
                       <div className={styles.actions}>
                         <button className={styles.iconBtn} title="View" onClick={() => setViewBill(bill)}><Eye size={16} /></button>
