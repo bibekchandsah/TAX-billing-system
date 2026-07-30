@@ -15,7 +15,7 @@ import autoTable from "jspdf-autotable";
 import styles from './Ledger.module.css';
 
 const Ledger = () => {
-  const { user } = useAuthStore();
+  const { user, activeUid } = useAuthStore();
   const { addToast, activeFiscalYear, activeMonth } = useAppStore();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [customers, setCustomers] = useState([]);
@@ -59,8 +59,8 @@ const Ledger = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) loadCustomers();
-  }, [user]);
+    if (activeUid) loadCustomers();
+  }, [activeUid]);
 
   useEffect(() => {
     if (selectedCustomer) {
@@ -74,8 +74,8 @@ const Ledger = () => {
   const loadCustomers = async () => {
     setLoading(true);
     try {
-      const data = await getCustomers(user.uid);
-      const bills = await getBills(user.uid);
+      const data = await getCustomers(activeUid);
+      const bills = await getBills(activeUid);
       
       const enrichedData = data.map(customer => {
         const customerBills = bills.filter(b => b.panVatNo === customer.panVatNo);
@@ -87,7 +87,7 @@ const Ledger = () => {
       });
       
       setCustomers(enrichedData);
-      const userSettings = await getSettings(user.uid);
+      const userSettings = await getSettings(activeUid);
       setSettings(userSettings);
     } catch (err) {
       console.error(err);
@@ -147,7 +147,7 @@ const Ledger = () => {
 
   const executeDelete = async (customerId = customerToDelete?.id) => {
     try {
-      await deleteRecord(user.uid, 'ledger', customerId);
+      await deleteRecord(activeUid, 'ledger', customerId);
       setCustomers(customers.filter(c => c.id !== customerId));
       if (selectedCustomer?.id === customerId) setSelectedCustomer(null);
       setDeleteConfirmModalOpen(false);
@@ -180,7 +180,7 @@ const Ledger = () => {
 
   const executeDeleteBill = async (billId = billToDelete?.id) => {
     try {
-      await deleteRecord(user.uid, 'records', billId);
+      await deleteRecord(activeUid, 'records', billId);
       setLedgerEntries(ledgerEntries.filter(b => b.id !== billId));
       setDeleteBillConfirmOpen(false);
       setBillToDelete(null);
@@ -196,7 +196,7 @@ const Ledger = () => {
     setLoadingEntries(true);
     try {
       // Fetch all bills from the db service which uses the correct VAT_PAN namespace
-      const allBills = await getBills(user.uid);
+      const allBills = await getBills(activeUid);
       const entries = allBills.filter(bill => bill.panVatNo === panVatNo);
       
       // Sort descending by timestamp
@@ -273,10 +273,10 @@ const Ledger = () => {
       };
       
       if (isEditingCustomer) {
-        await updateCustomer(user.uid, customerToEdit.id, customerData);
+        await updateCustomer(activeUid, customerToEdit.id, customerData);
       } else {
         customerData.createdAt = new Date().toISOString();
-        await addCustomer(user.uid, customerData);
+        await addCustomer(activeUid, customerData);
       }
       
       setFormData({

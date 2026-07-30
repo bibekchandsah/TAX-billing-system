@@ -8,7 +8,7 @@ import { Plus, Trash2, Save, X, Download } from 'lucide-react';
 import styles from '../pages/VATBill.module.css';
 
 const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
-  const { user } = useAuthStore();
+  const { user, activeUid } = useAuthStore();
   const { addToast } = useAppStore();
   
   const [type, setType] = useState(bill.type || 'Sale');
@@ -43,18 +43,18 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
   
   // Load initial data
   useEffect(() => {
-    if (user) {
+    if (activeUid) {
       loadInitialData();
     }
-  }, [user]);
+  }, [activeUid]);
 
   const loadInitialData = async () => {
     try {
-      const fetchedSettings = await getSettings(user.uid);
+      const fetchedSettings = await getSettings(activeUid);
       if (fetchedSettings) {
         setSettings(fetchedSettings);
       }
-      const stockData = await getStocksWithCalculatedQty(user.uid, bill.id);
+      const stockData = await getStocksWithCalculatedQty(activeUid, bill.id);
       setStocks(stockData);
     } catch (err) {
       console.error(err);
@@ -64,8 +64,8 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
   // Auto-fetch customer details when PAN reaches 9 digits
   useEffect(() => {
     const fetchCustomer = async () => {
-      if (customer.pan.length >= 9 && user) {
-        const existingCustomer = await getCustomerByPan(user.uid, customer.pan);
+      if (customer.pan.length >= 9 && activeUid) {
+        const existingCustomer = await getCustomerByPan(activeUid, customer.pan);
         if (existingCustomer) {
           setCustomer(prev => ({
             ...prev,
@@ -80,7 +80,7 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
       }
     };
     fetchCustomer();
-  }, [customer.pan, user]);
+  }, [customer.pan, activeUid]);
 
   const handleCustomerChange = (e) => {
     const { name, value } = e.target;
@@ -316,7 +316,7 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
         lastUpdated: new Date().toISOString()
       };
       
-      const updatedBill = await updateBill(user.uid, bill.id, billData);
+      const updatedBill = await updateBill(activeUid, bill.id, billData);
       
       alert('Bill updated successfully!');
       onSave(updatedBill);

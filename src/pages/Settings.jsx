@@ -13,7 +13,7 @@ import { get, set } from 'idb-keyval';
 import styles from './Settings.module.css';
 
 const Settings = () => {
-  const { user, profile, logout, sessionId, revokeSession, logoutAllOtherDevices } = useAuthStore();
+  const { user, profile, activeUid, logout, sessionId, revokeSession, logoutAllOtherDevices } = useAuthStore();
   const { addToast, activeFiscalYear, setActiveFiscalYear } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -104,8 +104,8 @@ const Settings = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
-    const q = query(collection(db, 'users', user.uid, 'sessions'));
+    if (!activeUid) return;
+    const q = query(collection(db, 'users', activeUid, 'sessions'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const sessData = [];
       snapshot.forEach(doc => sessData.push({ id: doc.id, ...doc.data() }));
@@ -117,17 +117,17 @@ const Settings = () => {
       setSessions(sessData);
     });
     return () => unsubscribe();
-  }, [user, sessionId]);
+  }, [activeUid, sessionId]);
 
 
 
   useEffect(() => {
-    if (user) loadSettings();
-  }, [user]);
+    if (activeUid) loadSettings();
+  }, [activeUid]);
 
   const loadSettings = async () => {
     try {
-      const data = await getSettings(user.uid);
+      const data = await getSettings(activeUid);
       if (data) {
         setFormData(prev => ({ ...prev, ...data }));
         if (data.actionPin) setOriginalPin(data.actionPin);
@@ -169,7 +169,7 @@ const Settings = () => {
         ...formData,
         vatPercentage: Number(formData.vatPercentage) || 0
       };
-      await updateSettings(user.uid, dataToSave);
+      await updateSettings(activeUid, dataToSave);
       addToast('Settings updated successfully!', 'success');
     } catch (err) {
       console.error(err);
@@ -182,7 +182,7 @@ const Settings = () => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      await generateExcelBackup(user.uid);
+      await generateExcelBackup(activeUid);
       addToast('Data exported successfully!', 'success');
     } catch (error) {
       addToast('Failed to export data.', 'error');

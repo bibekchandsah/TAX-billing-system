@@ -7,7 +7,7 @@ import { Search, Plus, Trash2, Save, RefreshCw, X } from 'lucide-react';
 import styles from './VATBill.module.css';
 
 const VATBill = () => {
-  const { user } = useAuthStore();
+  const { user, activeUid } = useAuthStore();
   const { addToast } = useAppStore();
   
   const [type, setType] = useState('Sale');
@@ -36,21 +36,21 @@ const VATBill = () => {
   
   // Load initial data
   useEffect(() => {
-    if (user) {
+    if (activeUid) {
       loadInitialData();
     }
-  }, [user, type]);
+  }, [activeUid, type]);
 
   const loadInitialData = async () => {
     try {
       if (type === 'Sale') {
-        const nextBillNo = await getLatestBillNumber(user.uid, 'Sale');
+        const nextBillNo = await getLatestBillNumber(activeUid, 'Sale');
         setBillNo(nextBillNo.toString().padStart(4, '0'));
       } else {
         setBillNo('');
       }
       
-      const fetchedSettings = await getSettings(user.uid);
+      const fetchedSettings = await getSettings(activeUid);
       if (fetchedSettings) {
         setSettings(fetchedSettings);
         if (fetchedSettings.vatPercentage) {
@@ -68,7 +68,7 @@ const VATBill = () => {
         }
       }
 
-      const stockData = await getStocksWithCalculatedQty(user.uid);
+      const stockData = await getStocksWithCalculatedQty(activeUid);
       setStocks(stockData);
     } catch (err) {
       console.error(err);
@@ -78,8 +78,8 @@ const VATBill = () => {
   // Auto-fetch customer details when PAN reaches 9 digits
   useEffect(() => {
     const fetchCustomer = async () => {
-      if (customer.pan.length >= 9 && user) {
-        const existingCustomer = await getCustomerByPan(user.uid, customer.pan);
+      if (customer.pan.length >= 9 && activeUid) {
+        const existingCustomer = await getCustomerByPan(activeUid, customer.pan);
         if (existingCustomer) {
           setCustomer(prev => ({
             ...prev,
@@ -94,7 +94,7 @@ const VATBill = () => {
       }
     };
     fetchCustomer();
-  }, [customer.pan, user]);
+  }, [customer.pan, activeUid]);
 
   const handleCustomerChange = (e) => {
     const { name, value } = e.target;
@@ -338,7 +338,7 @@ const VATBill = () => {
     
     setLoading(true);
     try {
-      const existingCustomer = await getCustomerByPan(user.uid, customer.pan);
+      const existingCustomer = await getCustomerByPan(activeUid, customer.pan);
       if (existingCustomer && existingCustomer.customerName.toLowerCase() !== customer.name.toLowerCase()) {
         addToast(`PAN/VAT No. already exists for customer "${existingCustomer.customerName}".`, 'error');
         setLoading(false);
@@ -361,7 +361,7 @@ const VATBill = () => {
         timestamp: new Date().toISOString()
       };
       
-      await addBill(user.uid, billData);
+      await addBill(activeUid, billData);
       
       // Reset form
       handleReset();

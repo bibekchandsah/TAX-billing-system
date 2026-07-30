@@ -30,9 +30,10 @@ import {
 import styles from './MainLayout.module.css';
 
 import { getSettings } from '../services/db';
+import AdminUsersBar from '../components/AdminUsersBar';
 
 const MainLayout = () => {
-  const { user, profile, logout, updateProfilePhoto, updateProfileName } = useAuthStore();
+  const { user, profile, activeUid, activeUserEmail, logout, updateProfilePhoto, updateProfileName } = useAuthStore();
   const { theme, toggleTheme, sidebarOpen, toggleSidebar, activeFiscalYear, setActiveFiscalYear, activeMonth, setActiveMonth } = useAppStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -323,6 +324,8 @@ const MainLayout = () => {
             <h1 className={styles.pageTitle}>{pageTitle}</h1>
           </div>
           
+          <AdminUsersBar />
+
           <div className={styles.topbarRight}>
             {/* Fiscal Year Selector */}
             <div className={styles.fySelectorContainer} ref={fyDropdownRef}>
@@ -513,6 +516,17 @@ const MainLayout = () => {
 
         {/* Page Content */}
         <div className={styles.content}>
+          {activeUid !== user.uid && (
+            <div style={{ backgroundColor: '#ef4444', color: 'white', padding: '8px 16px', borderRadius: '8px', marginBottom: '16px', display: 'flex', display: 'none', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>You are viewing data for: <strong>{activeUserEmail}</strong></span>
+              <button 
+                onClick={() => useAuthStore.getState().setActiveUser(user.uid, user.email)}
+                style={{ backgroundColor: 'white', color: '#ef4444', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Back to My Data
+              </button>
+            </div>
+          )}
           <Outlet />
         </div>
       </main>

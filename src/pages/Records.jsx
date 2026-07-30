@@ -12,7 +12,7 @@ import EditBillModal from '../components/EditBillModal';
 import styles from './Records.module.css';
 
 const Records = () => {
-  const { user, profile } = useAuthStore();
+  const { user, profile, activeUid } = useAuthStore();
   const { activeFiscalYear, activeMonth, addToast } = useAppStore();
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,10 +34,10 @@ const Records = () => {
   const [billToEdit, setBillToEdit] = useState(null);
 
   useEffect(() => {
-    if (user) {
+    if (activeUid) {
       loadBills();
     }
-  }, [user]);
+  }, [activeUid]);
 
   // We removed the useEffect that auto-populated fromDate and toDate from activeFiscalYear.
   // The filtering logic below now applies the FY date range transparently in the background if fromDate/toDate are empty.
@@ -45,9 +45,9 @@ const Records = () => {
   const loadBills = async () => {
     setLoading(true);
     try {
-      const data = await getBills(user.uid);
+      const data = await getBills(activeUid);
       setBills(data);
-      const userSettings = await getSettings(user.uid);
+      const userSettings = await getSettings(activeUid);
       setSettings(userSettings);
     } catch (err) {
       console.error(err);
@@ -87,7 +87,7 @@ const Records = () => {
 
   const executeDelete = async (billId = billToDelete?.id) => {
     try {
-      await deleteRecord(user.uid, 'records', billId);
+      await deleteRecord(activeUid, 'records', billId);
       setBills(bills.filter(b => b.id !== billId));
       setDeleteConfirmModalOpen(false);
       setBillToDelete(null);

@@ -18,16 +18,35 @@ import { parseUserAgent } from '../utils/deviceParser';
 export const useAuthStore = create((set, get) => ({
   user: null,
   profile: null, // Additional user info from Firestore
+  isAdmin: false,
+  activeUid: null,
+  activeUserEmail: null,
   loading: true,
   error: null,
   sessionId: null,
   unsubscribeSession: null,
   heartbeatInterval: null,
 
+  setActiveUser: (uid, email) => set({ activeUid: uid, activeUserEmail: email }),
+
   initAuthListener: () => {
     return onAuthStateChanged(auth, async (user) => {
       if (user) {
-        set({ user });
+        const adminEmailsStr = import.meta.env.VITE_ADMIN_EMAIL || import.meta.env.VITE_ADMIN_EMAILS || '';
+        const adminEmails = adminEmailsStr.split(',').map(e => e.trim().toLowerCase());
+        const isAdminUser = adminEmails.includes(user.email?.toLowerCase());
+        
+        // Preserve active user if admin is switching
+        const state = get();
+        const nextActiveUid = (isAdminUser && state.activeUid) ? state.activeUid : user.uid;
+        const nextActiveEmail = (isAdminUser && state.activeUserEmail) ? state.activeUserEmail : user.email;
+
+        set({ 
+          user, 
+          isAdmin: isAdminUser,
+          activeUid: nextActiveUid,
+          activeUserEmail: nextActiveEmail
+        });
         
         // --- Session Management ---
         let sid = localStorage.getItem('vat_session_id');
@@ -87,7 +106,7 @@ export const useAuthStore = create((set, get) => ({
         const { unsubscribeSession, heartbeatInterval } = get();
         if (unsubscribeSession) unsubscribeSession();
         if (heartbeatInterval) clearInterval(heartbeatInterval);
-        set({ user: null, profile: null, sessionId: null, unsubscribeSession: null, heartbeatInterval: null });
+        set({ user: null, profile: null, isAdmin: false, activeUid: null, activeUserEmail: null, sessionId: null, unsubscribeSession: null, heartbeatInterval: null });
       }
       set({ loading: false });
     });

@@ -15,7 +15,7 @@ import { Search, Plus, Edit, Trash2, Package as PackageIcon, Tag, Archive, X, Pr
 import styles from './Stock.module.css';
 
 const Stock = () => {
-  const { user } = useAuthStore();
+  const { user, activeUid } = useAuthStore();
   const { addToast, activeFiscalYear, activeMonth } = useAppStore();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [stocks, setStocks] = useState([]);
@@ -59,8 +59,8 @@ const Stock = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) loadStocks();
-  }, [user]);
+    if (activeUid) loadStocks();
+  }, [activeUid]);
 
   useEffect(() => {
     if (selectedStock) {
@@ -74,9 +74,9 @@ const Stock = () => {
   const loadStocks = async () => {
     setLoading(true);
     try {
-      const computedStocks = await getStocksWithCalculatedQty(user.uid);
+      const computedStocks = await getStocksWithCalculatedQty(activeUid);
       setStocks(computedStocks);
-      const userSettings = await getSettings(user.uid);
+      const userSettings = await getSettings(activeUid);
       setSettings(userSettings);
       
       // Auto-set first unit if available
@@ -152,7 +152,7 @@ const Stock = () => {
 
   const executeDelete = async (stockId = stockToDelete?.id) => {
     try {
-      await deleteRecord(user.uid, 'stock', stockId);
+      await deleteRecord(activeUid, 'stock', stockId);
       setStocks(stocks.filter(s => s.id !== stockId));
       if (selectedStock?.id === stockId) setSelectedStock(null);
       setDeleteStockConfirmOpen(false);
@@ -185,7 +185,7 @@ const Stock = () => {
 
   const executeDeleteBill = async (billId = billToDelete?.billId) => {
     try {
-      await deleteRecord(user.uid, 'records', billId);
+      await deleteRecord(activeUid, 'records', billId);
       setStockEntries(stockEntries.filter(b => b.billId !== billId));
       setDeleteBillConfirmOpen(false);
       setBillToDelete(null);
@@ -203,7 +203,7 @@ const Stock = () => {
     setLoadingEntries(true);
     try {
       // Fetch all bills from the db service which uses the correct VAT_PAN namespace
-      const allBills = await getBills(user.uid);
+      const allBills = await getBills(activeUid);
       
       let entries = [];
       allBills.forEach(bill => {
@@ -297,7 +297,7 @@ const Stock = () => {
       };
       
       if (isEditingStock) {
-        await updateStock(user.uid, stockToEdit.id, stockData);
+        await updateStock(activeUid, stockToEdit.id, stockData);
       } else {
         stockData.currentStock = initialQty;
         stockData.stockIn = initialQty;
@@ -305,7 +305,7 @@ const Stock = () => {
         stockData.amountIn = initialQty * purchaseRate;
         stockData.amountOut = 0;
         stockData.createdAt = new Date().toISOString();
-        await addStock(user.uid, stockData);
+        await addStock(activeUid, stockData);
       }
       
       setFormData({
