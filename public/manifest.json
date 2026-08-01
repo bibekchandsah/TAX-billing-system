@@ -1,13 +1,5 @@
 {
- "name": "VAT Billing System",
- "short_name": "VAT Bill",
- "description": "Modern VAT billing system with Nepali date support, PDF generation, and secure database storage",
- "start_url": "/",
- "scope": "/",
- "display": "standalone",
- "orientation": "portrait-primary",
- "theme_color": "#1e3a5f",
- "background_color": "#ffffff",
+ "name": "App",
  "icons": [
   {
    "src": "\/android-icon-36x36.png",
