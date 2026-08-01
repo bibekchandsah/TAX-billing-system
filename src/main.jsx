@@ -2,6 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { registerSW } from 'virtual:pwa-register'
+
+// Register PWA service worker immediately for offline capabilities and browser install prompt
+registerSW({ immediate: true })
 
 // Capture the install prompt as early as possible, before React mounts.
 // The event often fires before any component's useEffect can register a listener.
