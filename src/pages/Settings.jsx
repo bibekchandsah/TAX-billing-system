@@ -247,7 +247,7 @@ const Settings = () => {
               
               <div className="form-group">
                 <label className="form-label">Business Name</label>
-                <input type="text" className="input-field" name="businessName" value={formData.businessName} onChange={handleInputChange} required />
+                <input type="text" className="input-field" name="businessName" value={formData.businessName} onChange={handleInputChange} required autoComplete='off' />
               </div>
 
               <div className="form-group" style={{gridColumn: '1 / -1'}}>
@@ -428,6 +428,7 @@ const Settings = () => {
                       pattern="\d*"
                       maxLength="4"
                       autoFocus={isPinUnlocked}
+                      autoComplete='off'
                       style={{paddingRight: '2.5rem'}}
                     />
                     <button 

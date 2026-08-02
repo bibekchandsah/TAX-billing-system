@@ -111,6 +111,13 @@ const VATBill = () => {
     setCustomer(prev => ({ ...prev, [name]: formattedValue }));
   };
 
+  const handleDateKeyDown = (e) => {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      document.getElementById('particular-0')?.focus();
+    }
+  };
+
   const addItem = () => {
     // Validation: prevent adding new row if previous is empty
     const lastIndex = items.length - 1;
@@ -441,6 +448,7 @@ const VATBill = () => {
               value={date} 
               onChange={setDate} 
               required 
+              onKeyDown={handleDateKeyDown}
             />
           </div>
           <div className="form-group">
@@ -507,6 +515,7 @@ const VATBill = () => {
                         onBlur={handleStockInputBlur}
                         onKeyDown={(e) => handleStockKeyDown(e, index)}
                         placeholder="Type to search..."
+                        autoComplete='off'
                         autoFocus={index > 0 && index === items.length - 1}
                       />
                       

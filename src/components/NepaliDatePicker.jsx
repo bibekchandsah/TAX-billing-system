@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useId } from 'react';
 import { useAppStore } from '../store/appStore';
 
-const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", className = "", required = false }) => {
+const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", className = "", required = false, ...rest }) => {
   const { theme } = useAppStore();
   const containerRef = useRef(null);
   const datepickerId = useId().replace(/:/g, ''); // useId might contain colons which are invalid in CSS selectors
@@ -153,6 +153,7 @@ const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", classN
       id={`ndp-${datepickerId}`}
       className={`nepali-datepicker-container ${className}`}
       style={{ display: 'inline-block', width: '100%', position: 'relative' }}
+      {...rest}
     />
   );
 };
