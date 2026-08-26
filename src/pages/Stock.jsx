@@ -825,7 +825,7 @@ const Stock = () => {
                           <td>-</td>
                           <td>-</td>
                           <td>-</td>
-                          <td style={{color: 'var(--accent-primary)', fontWeight: 600}}>Rs. {taxableAmount.toFixed(2)}</td>
+                          <td style={{fontWeight: 600}}>Rs. {taxableAmount.toFixed(2)}</td>
                           <td style={{color: 'var(--accent-primary)', fontWeight: 700, fontSize: '0.95rem'}}>{closingStockQty} {selectedStock?.defaultUnit}</td>
                           <td>-</td>
                         </tr>
