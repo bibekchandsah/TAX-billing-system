@@ -50,8 +50,7 @@ const Stock = () => {
     particularName: '',
     particularId: '',
     defaultUnit: 'Pcs',
-    salesRate: '',
-    purchaseRate: '',
+    rate: '',
     initialStockQuantity: '',
     date: '',
     billNumber: ''
@@ -121,8 +120,7 @@ const Stock = () => {
       particularName: stock.particularName || '',
       particularId: stock.particularId || '',
       defaultUnit: stock.defaultUnit || 'Pcs',
-      salesRate: stock.salesRate !== undefined && stock.salesRate !== '' ? stock.salesRate : (stock.price || ''),
-      purchaseRate: stock.purchaseRate !== undefined && stock.purchaseRate !== '' ? stock.purchaseRate : (stock.price || ''),
+      rate: stock.rate !== undefined && stock.rate !== '' ? stock.rate : (stock.price || ''),
       initialStockQuantity: stock.currentStock || '',
       date: stock.date || '',
       billNumber: stock.billNumber || ''
@@ -285,15 +283,13 @@ const Stock = () => {
     }
     try {
       const initialQty = Number(formData.initialStockQuantity) || 0;
-      const salesRate = Number(formData.salesRate) || 0;
-      const purchaseRate = Number(formData.purchaseRate) || 0;
+      const rate = Number(formData.rate) || 0;
       
       const stockData = {
         ...formData,
         particularId: formData.particularId.padStart(5, '0'),
-        salesRate,
-        purchaseRate,
-        price: salesRate
+        rate,
+        price: rate
       };
       
       if (isEditingStock) {
@@ -302,14 +298,14 @@ const Stock = () => {
         stockData.currentStock = initialQty;
         stockData.stockIn = initialQty;
         stockData.stockOut = 0;
-        stockData.amountIn = initialQty * purchaseRate;
+        stockData.amountIn = initialQty * rate;
         stockData.amountOut = 0;
         stockData.createdAt = new Date().toISOString();
         await addStock(activeUid, stockData);
       }
       
       setFormData({
-        particularName: '', particularId: '', defaultUnit: 'Pcs', salesRate: '', purchaseRate: '', 
+        particularName: '', particularId: '', defaultUnit: 'Pcs', rate: '', 
         initialStockQuantity: '', date: '', billNumber: ''
       });
       setShowAddModal(false);
@@ -360,9 +356,9 @@ const Stock = () => {
 
   // Calculate opening stock quantity before effFromDate
   const initialQty = Number(selectedStock?.initialStockQuantity) || 0;
-  const purchaseRate = Number(selectedStock?.purchaseRate ?? selectedStock?.price ?? 0);
+  const rate = Number(selectedStock?.rate ?? selectedStock?.price ?? 0);
   const initialDate = selectedStock?.date || '';
-  const initialAmt = initialQty * purchaseRate;
+  const initialAmt = initialQty * rate;
 
   let openingStockQty = 0;
   let openingStockAmt = 0;
@@ -563,7 +559,7 @@ const Stock = () => {
             </div>
             <button className="btn-primary" onClick={() => {
               setFormData({
-                particularName: '', particularId: getNextParticularId(), defaultUnit: settings?.units?.[0] || 'Pcs', salesRate: '', purchaseRate: '', 
+                particularName: '', particularId: getNextParticularId(), defaultUnit: settings?.units?.[0] || 'Pcs', rate: '', 
                 initialStockQuantity: '', date: '', billNumber: ''
               });
               setIsEditingStock(false);
@@ -594,19 +590,8 @@ const Stock = () => {
                     <span className={styles.itemId}>#{stock.particularId}</span>
                   </div>
                   
-                  <div className={styles.ratesContainer}>
-                    <div className={styles.rateBadge}>
-                      <span className={styles.rateLabel}>Sale Rate</span>
-                      <span className={styles.rateValue}>Rs. {Number(stock.salesRate ?? stock.price ?? 0).toFixed(2)}</span>
-                    </div>
-                    <div className={styles.rateBadge}>
-                      <span className={styles.rateLabel}>Purch Rate</span>
-                      <span className={styles.rateValue}>Rs. {Number(stock.purchaseRate ?? stock.price ?? 0).toFixed(2)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className={styles.cardFooter}>
-                    <span>Current Stock:</span>
+                  <div className={styles.cardFooter} style={{ marginTop: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Current Stock</span>
                     <span className={styles.stockCount}>{stock.actualCurrentStock} {stock.defaultUnit}</span>
                   </div>
                 </div>
@@ -635,8 +620,7 @@ const Stock = () => {
                   <div className={styles.ledgerMeta}>
                     <span><Archive size={14}/> ID: #{selectedStock.particularId}</span>
                     <span><PackageIcon size={14}/> Unit: {selectedStock.defaultUnit}</span>
-                    <span className={styles.salesTag}><Tag size={14}/> Sale: Rs. {Number(selectedStock.salesRate ?? selectedStock.price ?? 0).toFixed(2)}</span>
-                    <span className={styles.purchTag}><Tag size={14}/> Purchase: Rs. {Number(selectedStock.purchaseRate ?? selectedStock.price ?? 0).toFixed(2)}</span>
+                    <span className={styles.salesTag}><Tag size={14}/> Rate: Rs. {Number(selectedStock.rate ?? selectedStock.price ?? 0).toFixed(2)}</span>
                   </div>
                 </div>
                 <div className={styles.actions}>
@@ -889,15 +873,9 @@ const Stock = () => {
                   </select>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Sales Rate *</label>
-                    <input type="number" step="0.01" min="0" className="input-field" name="salesRate" value={formData.salesRate} onChange={handleInputChange} required />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Purchase Rate *</label>
-                    <input type="number" step="0.01" min="0" className="input-field" name="purchaseRate" value={formData.purchaseRate} onChange={handleInputChange} required />
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">Rate *</label>
+                  <input type="number" step="0.01" min="0" className="input-field" name="rate" value={formData.rate} onChange={handleInputChange} required />
                 </div>
 
                 <div className={styles.divider}></div>

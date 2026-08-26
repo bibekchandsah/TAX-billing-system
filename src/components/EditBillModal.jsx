@@ -200,9 +200,7 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
         }
       }
 
-      const rateToUse = type === 'Purchase' 
-        ? (stock.purchaseRate !== undefined && stock.purchaseRate !== '' ? Number(stock.purchaseRate) : (Number(stock.price) || 0))
-        : (stock.salesRate !== undefined && stock.salesRate !== '' ? Number(stock.salesRate) : (Number(stock.price) || 0));
+      const rateToUse = '';
 
       const newItems = [...items];
       newItems[index] = {
@@ -419,7 +417,6 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
                               >
                                 <div className={styles.autocompleteItemName}>{stock.particularName}</div>
                                 <div className={styles.autocompleteItemDetails}>
-                                  <span>Rs. {type === 'Purchase' ? (stock.purchaseRate !== undefined && stock.purchaseRate !== '' ? stock.purchaseRate : stock.price) : (stock.salesRate !== undefined && stock.salesRate !== '' ? stock.salesRate : stock.price)}</span>
                                   <span>{type === 'Sale' ? getAvailableStock(stock, item.id) : stock.currentStock} {stock.defaultUnit} left</span>
                                 </div>
                               </li>
@@ -428,9 +425,9 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
                         )}
                       </div>
                     </td>
-                    <td><input id={`qty-${index}`} type="number" className="input-field" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} onKeyDown={(e) => { if (e.key === 'Tab' && item.qty && item.particular && index === items.length - 1) { e.preventDefault(); addItem(); setTimeout(() => document.getElementById(`particular-${index + 1}`)?.focus(), 50); } }} /></td>
+                    <td><input id={`qty-${index}`} type="number" className="input-field" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} /></td>
                     <td><input type="text" className="input-field" value={item.unit} disabled tabIndex="-1" /></td>
-                    <td><input id={`rate-${index}`} type="number" className="input-field" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} step="0.01" min="0" tabIndex="-1" /></td>
+                    <td><input id={`rate-${index}`} type="number" className="input-field" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} onKeyDown={(e) => { if (e.key === 'Tab' && !e.shiftKey && item.qty && item.particular && index === items.length - 1) { e.preventDefault(); addItem(); setTimeout(() => document.getElementById(`particular-${index + 1}`)?.focus(), 50); } }} step="0.01" min="0" /></td>
                     <td><input type="text" className="input-field" value={Number(item.amount || 0).toFixed(2)} disabled tabIndex="-1" /></td>
                     <td><button className={styles.iconBtn} onClick={() => removeItem(item.id)}><Trash2 size={18} /></button></td>
                   </tr>

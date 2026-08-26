@@ -239,9 +239,7 @@ const VATBill = () => {
         }
       }
 
-      const rateToUse = type === 'Purchase' 
-        ? (stock.purchaseRate !== undefined && stock.purchaseRate !== '' ? Number(stock.purchaseRate) : (Number(stock.price) || 0))
-        : (stock.salesRate !== undefined && stock.salesRate !== '' ? Number(stock.salesRate) : (Number(stock.price) || 0));
+      const rateToUse = '';
 
       const newItems = [...items];
       newItems[index] = {
@@ -533,7 +531,6 @@ const VATBill = () => {
                             >
                               <div className={styles.autocompleteItemName}>{stock.particularName}</div>
                               <div className={styles.autocompleteItemDetails}>
-                                <span>Rs. {type === 'Purchase' ? (stock.purchaseRate !== undefined && stock.purchaseRate !== '' ? stock.purchaseRate : stock.price) : (stock.salesRate !== undefined && stock.salesRate !== '' ? stock.salesRate : stock.price)}</span>
                                 <span>{type === 'Sale' ? getAvailableStock(stock, item.id) : stock.currentStock} {stock.defaultUnit} left</span>
                               </div>
                             </li>
@@ -549,14 +546,6 @@ const VATBill = () => {
                       className="input-field" 
                       value={item.qty}
                       onChange={(e) => updateItem(item.id, 'qty', e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Tab' && !e.shiftKey && index === items.length - 1) {
-                          if (item.particular && item.qty > 0 && item.rate > 0) {
-                            e.preventDefault();
-                            addItem();
-                          }
-                        }
-                      }}
                       min="1"
                     />
                   </td>
@@ -579,9 +568,17 @@ const VATBill = () => {
                       className="input-field" 
                       value={item.rate}
                       onChange={(e) => updateItem(item.id, 'rate', Number(e.target.value))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Tab' && !e.shiftKey && index === items.length - 1) {
+                          if (item.particular && item.qty > 0 && item.rate > 0) {
+                            e.preventDefault();
+                            addItem();
+                            setTimeout(() => document.getElementById(`particular-${index + 1}`)?.focus(), 50);
+                          }
+                        }
+                      }}
                       step="0.01"
                       min="0"
-                      tabIndex="-1"
                     />
                   </td>
                   <td>
