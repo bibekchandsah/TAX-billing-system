@@ -873,11 +873,6 @@ const Stock = () => {
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Rate *</label>
-                  <input type="number" step="0.01" min="0" className="input-field" name="rate" value={formData.rate} onChange={handleInputChange} required />
-                </div>
-
                 <div className={styles.divider}></div>
                 
                 <div className="form-group">
@@ -887,6 +882,10 @@ const Stock = () => {
 
                 {Number(formData.initialStockQuantity) > 0 && (
                   <>
+                    <div className="form-group">
+                      <label className="form-label">Rate *</label>
+                      <input type="number" step="0.01" min="0" className="input-field" name="rate" value={formData.rate} onChange={handleInputChange} required />
+                    </div>
                     <div className="form-group">
                       <label className="form-label">Opening Date (BS) *</label>
                       <NepaliDatePicker value={formData.date} onChange={(val) => setFormData(p => ({...p, date: val}))} className="input-field" required placeholder="YYYY-MM-DD" />
