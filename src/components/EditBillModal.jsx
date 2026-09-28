@@ -36,6 +36,16 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
   const [stockSearch, setStockSearch] = useState('');
   const [highlightedOptionIndex, setHighlightedOptionIndex] = useState(0);
   const panInputRef = useRef(null);
+  const dropdownListRef = useRef(null);
+
+  useEffect(() => {
+    if (dropdownListRef.current && highlightedOptionIndex >= 0) {
+      const activeItem = dropdownListRef.current.children[highlightedOptionIndex];
+      if (activeItem) {
+        activeItem.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [highlightedOptionIndex]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -407,7 +417,7 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
                           placeholder="Type to search..."
                         />
                         {activeItemIndex === index && filteredStocks.length > 0 && (
-                          <ul className={styles.autocompleteDropdown}>
+                          <ul ref={dropdownListRef} className={styles.autocompleteDropdown}>
                             {filteredStocks.map((stock, idx) => (
                               <li 
                                 key={stock.id}
