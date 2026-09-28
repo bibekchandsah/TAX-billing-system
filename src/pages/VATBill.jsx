@@ -546,6 +546,7 @@ const VATBill = () => {
                       className="input-field" 
                       value={item.qty}
                       onChange={(e) => updateItem(item.id, 'qty', e.target.value)}
+                      onWheel={(e) => e.target.blur()}
                       min="1"
                     />
                   </td>
@@ -568,6 +569,7 @@ const VATBill = () => {
                       className="input-field" 
                       value={item.rate}
                       onChange={(e) => updateItem(item.id, 'rate', Number(e.target.value))}
+                      onWheel={(e) => e.target.blur()}
                       onKeyDown={(e) => {
                         if (e.key === 'Tab' && !e.shiftKey && index === items.length - 1) {
                           if (item.particular && item.qty > 0 && item.rate > 0) {

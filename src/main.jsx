@@ -21,6 +21,13 @@ window.addEventListener('appinstalled', () => {
   window.dispatchEvent(new Event('pwaInstalled'));
 });
 
+// Prevent mouse wheel from changing values in number inputs
+document.addEventListener('wheel', () => {
+  if (document.activeElement?.type === 'number') {
+    document.activeElement.blur();
+  }
+});
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

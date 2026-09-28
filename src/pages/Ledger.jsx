@@ -720,7 +720,7 @@ const Ledger = () => {
                 
                 <div className="form-group">
                   <label className="form-label">Opening Balance (Optional)</label>
-                  <input type="number" step="0.01" min="1" onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }} className="input-field" name="openingBalance" value={formData.openingBalance} onChange={handleInputChange} />
+                  <input type="number" step="0.01" min="1" onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }} onWheel={(e) => e.target.blur()} className="input-field" name="openingBalance" value={formData.openingBalance} onChange={handleInputChange} />
                 </div>
 
                 {formData.openingBalance && (

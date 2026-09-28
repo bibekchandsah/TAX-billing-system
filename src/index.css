@@ -80,6 +80,18 @@ input, select, textarea {
   font-family: inherit;
 }
 
+/* Remove number input spinners (up and down arrows) */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* Utilities */
 .glass-panel {
   background: var(--glass-bg);

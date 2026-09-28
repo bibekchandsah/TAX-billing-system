@@ -425,9 +425,9 @@ const EditBillModal = ({ bill, onClose, onSave, onDownload }) => {
                         )}
                       </div>
                     </td>
-                    <td><input id={`qty-${index}`} type="number" className="input-field" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} /></td>
+                    <td><input id={`qty-${index}`} type="number" className="input-field" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} onWheel={(e) => e.target.blur()} /></td>
                     <td><input type="text" className="input-field" value={item.unit} disabled tabIndex="-1" /></td>
-                    <td><input id={`rate-${index}`} type="number" className="input-field" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} onKeyDown={(e) => { if (e.key === 'Tab' && !e.shiftKey && item.qty && item.particular && index === items.length - 1) { e.preventDefault(); addItem(); setTimeout(() => document.getElementById(`particular-${index + 1}`)?.focus(), 50); } }} step="0.01" min="0" /></td>
+                    <td><input id={`rate-${index}`} type="number" className="input-field" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} onWheel={(e) => e.target.blur()} onKeyDown={(e) => { if (e.key === 'Tab' && !e.shiftKey && item.qty && item.particular && index === items.length - 1) { e.preventDefault(); addItem(); setTimeout(() => document.getElementById(`particular-${index + 1}`)?.focus(), 50); } }} step="0.01" min="0" /></td>
                     <td><input type="text" className="input-field" value={Number(item.amount || 0).toFixed(2)} disabled tabIndex="-1" /></td>
                     <td><button className={styles.iconBtn} onClick={() => removeItem(item.id)}><Trash2 size={18} /></button></td>
                   </tr>
