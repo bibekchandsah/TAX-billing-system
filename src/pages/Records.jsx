@@ -279,6 +279,11 @@ const Records = () => {
     const matchesToDate = effToDate ? bill.date <= effToDate : true;
 
     return matchesSearch && matchesFromDate && matchesToDate;
+  }).sort((a, b) => {
+    // Display: newest date first
+    if (a.date > b.date) return -1;
+    if (a.date < b.date) return 1;
+    return 0;
   });
 
   const totalSaleAmount = filteredBills
@@ -334,11 +339,17 @@ const Records = () => {
     
     yPos += 10;
 
-    // Table Data
+    // Table Data — PDF uses oldest-first (ascending) order
     const tableColumn = ["Date (BS)", "Bill No", "Customer Name", "PAN/VAT", "Type", "Total Sale", "Total Purchase"];
     const tableRows = [];
 
-    filteredBills.forEach(bill => {
+    const printBills = [...filteredBills].sort((a, b) => {
+      if (a.date < b.date) return -1;
+      if (a.date > b.date) return 1;
+      return 0;
+    });
+
+    printBills.forEach(bill => {
       tableRows.push([
         bill.date,
         bill.billNumber,

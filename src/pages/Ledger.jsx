@@ -199,8 +199,12 @@ const Ledger = () => {
       const allBills = await getBills(activeUid);
       const entries = allBills.filter(bill => bill.panVatNo === panVatNo);
       
-      // Sort descending by timestamp
-      entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      // Sort descending by BS date (newest first for display)
+      entries.sort((a, b) => {
+        if (a.date > b.date) return -1;
+        if (a.date < b.date) return 1;
+        return 0;
+      });
       setLedgerEntries(entries);
     } catch (err) {
       console.error(err);
@@ -397,7 +401,14 @@ const Ledger = () => {
       ]);
     }
 
-    filteredEntries.forEach(entry => {
+    // PDF uses oldest-first (ascending) order
+    const printEntries = [...filteredEntries].sort((a, b) => {
+      if (a.date < b.date) return -1;
+      if (a.date > b.date) return 1;
+      return 0;
+    });
+
+    printEntries.forEach(entry => {
       tableRows.push([
         entry.date,
         `Bill #${entry.billNumber}`,

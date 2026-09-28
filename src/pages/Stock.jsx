@@ -410,6 +410,9 @@ const Stock = () => {
 
   const closingStockQty = runningStock;
   const actualCurrentStock = closingStockQty;
+
+  // Display: newest date first (reversed), PDF uses entriesWithBalance (ascending) directly
+  const displayEntries = [...entriesWithBalance].reverse();
   
   // User explicitly requested Closing Amount to be strictly (Period In - Period Out) + Prior Carried Forward (Opening Amount)
   // But without Initial Stock included in Opening Amount!
@@ -752,7 +755,7 @@ const Stock = () => {
                         </tr>
 
                         {/* Middle Rows: Transactions in Period */}
-                        {entriesWithBalance.map(entry => (
+                        {displayEntries.map(entry => (
                           <tr key={entry.id}>
                             <td>{entry.date}</td>
                             <td>
