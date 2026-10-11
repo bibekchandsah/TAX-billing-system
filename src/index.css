@@ -232,30 +232,64 @@ input[type=number] {
 
 /* Nepali Datepicker Input Override */
 .nepali-datepicker,
+.nepali-datepicker-container,
 .ndp-input-wrapper {
   width: 100% !important;
   max-width: none !important;
   display: block !important;
 }
 
-.ndp-input-wrapper .ndp-input {
-  width: 100%;
+.nepali-datepicker-container.input-field {
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.nepali-datepicker-container input,
+.nepali-datepicker-container .ndp-input,
+.nepali-datepicker .ndp-input,
+.ndp-input-wrapper .ndp-input,
+.ndp-input {
+  width: 100% !important;
   padding: 0.5rem 0.75rem !important;
   padding-right: 40px !important;
   border-radius: var(--radius-md) !important;
   border: 1px solid var(--border-color) !important;
   background-color: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
   font-family: inherit !important;
   font-size: 0.875rem !important;
   box-sizing: border-box !important;
 }
 
-.ndp-input-wrapper .ndp-input:focus {
+.nepali-datepicker-container input:focus,
+.nepali-datepicker-container .ndp-input:focus,
+.nepali-datepicker .ndp-input:focus,
+.ndp-input-wrapper .ndp-input:focus,
+.ndp-input:focus {
   outline: none !important;
   border-color: var(--accent-primary) !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+
+.nepali-datepicker-container input::placeholder,
+.nepali-datepicker-container .ndp-input::placeholder,
+.ndp-input::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+/* Explicit Dark Mode Overrides for Datepicker Input */
+[data-theme='dark'] .nepali-datepicker-container input,
+[data-theme='dark'] .nepali-datepicker-container .ndp-input,
+[data-theme='dark'] .nepali-datepicker input,
+[data-theme='dark'] .ndp-input,
+.ndp-dark input,
+.ndp-dark .ndp-input {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 /* Nepali Datepicker Positioning Override */

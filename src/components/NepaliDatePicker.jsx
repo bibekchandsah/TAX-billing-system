@@ -8,17 +8,27 @@ const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", classN
   const pickerInstance = useRef(null);
   const isMouseDown = useRef(false);
 
+  const getIsDark = () => {
+    if (theme === 'system') {
+      return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return theme === 'dark';
+  };
+
   useEffect(() => {
     const initPicker = () => {
       if (window.NepaliDatePicker && containerRef.current) {
         try {
           const id = containerRef.current.id;
+          const isDark = getIsDark();
+          containerRef.current.classList.toggle('ndp-dark', isDark);
+
           // Only initialize once per container
           if (!pickerInstance.current) {
             pickerInstance.current = window.NepaliDatePicker.init(`#${id}`, {
               language: 'english',
-              mode: theme === 'dark' ? 'dark' : 'light',
-              dark: theme === 'dark',
+              mode: isDark ? 'dark' : 'light',
+              dark: isDark,
               theme: 'default',
               placeholder: placeholder,
               placeholderEn: placeholder,
@@ -154,8 +164,12 @@ const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", classN
 
   // Sync theme changes without full re-initialization
   useEffect(() => {
+    const isDark = getIsDark();
     if (pickerInstance.current && typeof pickerInstance.current.setDark === 'function') {
-      pickerInstance.current.setDark(theme === 'dark');
+      pickerInstance.current.setDark(isDark);
+    }
+    if (containerRef.current) {
+      containerRef.current.classList.toggle('ndp-dark', isDark);
     }
   }, [theme]);
 
