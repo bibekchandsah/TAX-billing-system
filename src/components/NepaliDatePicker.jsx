@@ -16,19 +16,19 @@ const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", classN
           // Only initialize once per container
           if (!pickerInstance.current) {
             pickerInstance.current = window.NepaliDatePicker.init(`#${id}`, {
-              mode: 'english',
-              theme: 'default',
+              language: 'english',
+              mode: theme === 'dark' ? 'dark' : 'light',
               dark: theme === 'dark',
+              theme: 'default',
               placeholder: placeholder,
               placeholderEn: placeholder,
               onChange: (data) => {
                 if (data && onChange) {
                   // Format as YYYY-MM-DD (BS)
-                  const val = data.bs ? `${data.bs.year}-${String(data.bs.month).padStart(2, '0')}-${String(data.bs.day).padStart(2, '0')}` : '';
+                  const val = data.value || (data.bs ? `${data.bs.year}-${String(data.bs.month).padStart(2, '0')}-${String(data.bs.day).padStart(2, '0')}` : '');
                   onChange(val);
                   
-                  // The library sets the input value to a verbose format just before calling onChange.
-                  // We manually override it here so the user sees the clean YYYY-MM-DD format.
+                  // Keep input value in sync with clean YYYY-MM-DD format
                   if (val && containerRef.current) {
                     const innerInput = containerRef.current.querySelector('input');
                     if (innerInput) {
@@ -41,9 +41,38 @@ const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", classN
               }
             });
             
-            // Note: Initial value sync is now handled by the separate useEffect below
+            // Sync initial value if provided
+            if (value && pickerInstance.current) {
+              const parts = value.split('-');
+              if (parts.length === 3) {
+                const y = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10);
+                const d = parseInt(parts[2], 10);
+                const options = pickerInstance.current.options || pickerInstance.current.opts;
+                const originalOnChange = options ? options.onChange : null;
+                if (options) options.onChange = null;
+                try {
+                  if (typeof pickerInstance.current.setDate === 'function') {
+                    pickerInstance.current.setDate(y, m, d);
+                  }
+                } catch(e) { console.error(e); }
+                if (options) options.onChange = originalOnChange;
+                const innerInput = containerRef.current?.querySelector('input');
+                if (innerInput) {
+                  innerInput.value = value;
+                }
+              }
+            }
+
+            if (containerRef.current) {
+              const innerInput = containerRef.current.querySelector('input');
+              if (innerInput) {
+                if (required) innerInput.required = true;
+                if (placeholder) innerInput.placeholder = placeholder;
+              }
+            }
           }
-        } catch(e) { console.error(e) }
+        } catch(e) { console.error(e); }
       } else {
         setTimeout(initPicker, 500);
       }
@@ -71,21 +100,25 @@ const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", classN
         const m = parseInt(parts[1], 10);
         const d = parseInt(parts[2], 10);
         
-        const current = pickerInstance.current.selected;
+        const dateResult = typeof pickerInstance.current.getDate === 'function'
+          ? pickerInstance.current.getDate()
+          : null;
+        const current = dateResult?.bs || pickerInstance.current.selected;
+        
         if (!current || current.year !== y || current.month !== m || current.day !== d) {
-          // Temporarily remove onChange to prevent infinite loops
-          const originalOnChange = pickerInstance.current.opts.onChange;
-          pickerInstance.current.opts.onChange = null;
+          // Safely access options/opts to avoid undefined error
+          const options = pickerInstance.current.options || pickerInstance.current.opts;
+          const originalOnChange = options ? options.onChange : null;
+          if (options) options.onChange = null;
           
           try {
             if (typeof pickerInstance.current.setDate === 'function') {
               pickerInstance.current.setDate(y, m, d);
             }
-          } catch(e) { console.error(e) }
+          } catch(e) { console.error(e); }
           
-          pickerInstance.current.opts.onChange = originalOnChange;
+          if (options) options.onChange = originalOnChange;
           
-          // Override the inner input again since setDate replaces it with verbose string
           const innerInput = containerRef.current?.querySelector('input');
           if (innerInput) {
             innerInput.value = value;
@@ -100,15 +133,21 @@ const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", classN
       }
     } else {
       // Clear if value is empty
-      if (pickerInstance.current.selected) {
-        const originalOnChange = pickerInstance.current.opts.onChange;
-        pickerInstance.current.opts.onChange = null;
+      const dateResult = typeof pickerInstance.current.getDate === 'function'
+        ? pickerInstance.current.getDate()
+        : null;
+      const current = dateResult?.bs || pickerInstance.current.selected;
+      
+      if (current) {
+        const options = pickerInstance.current.options || pickerInstance.current.opts;
+        const originalOnChange = options ? options.onChange : null;
+        if (options) options.onChange = null;
         try {
           if (typeof pickerInstance.current.clear === 'function') {
             pickerInstance.current.clear();
           }
         } catch(e) {}
-        pickerInstance.current.opts.onChange = originalOnChange;
+        if (options) options.onChange = originalOnChange;
       }
     }
   }, [value]);
@@ -119,6 +158,17 @@ const NepaliDatePicker = ({ value, onChange, placeholder = "Select Date", classN
       pickerInstance.current.setDark(theme === 'dark');
     }
   }, [theme]);
+
+  // Keep input attributes in sync
+  useEffect(() => {
+    if (containerRef.current) {
+      const innerInput = containerRef.current.querySelector('input');
+      if (innerInput) {
+        if (required !== undefined) innerInput.required = !!required;
+        if (placeholder) innerInput.placeholder = placeholder;
+      }
+    }
+  }, [required, placeholder]);
 
   const handleMouseDown = () => {
     isMouseDown.current = true;
